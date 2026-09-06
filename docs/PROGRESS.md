@@ -37,6 +37,8 @@ Status: **in-progress** (plan siap, implementasi belum dimulai)
 - [x] Task 0: Prasyarat (verifikasi baseline, branch kerja)
 - [x] Task 1: Dependencies (@dnd-kit + sonner) + mount Toaster
 - [ ] Task 2: Migrasi fractional position (double precision) + regen types
+  - Step 1,3-5 selesai: file migrasi `20260906010000_fractional_positions.sql` ditulis, `database.types.ts` diperbarui manual (Supabase CLI tidak terpasang, `position` tetap `number`), `tsc -b` exit 0, commit `feat: migrate list/task position to fractional double precision`.
+  - Step 2 (apply migrasi ke DB live) **pending** — menunggu `DATABASE_URL`; maintainer akan menerapkan via `scripts/migrate.mjs`. Checkbox tetap belum dicentang sampai migrasi diterapkan.
 - [ ] Task 3: Utilitas fractional index + self-check
 - [ ] Task 4: Refactor query task ke project scope
 - [ ] Task 5: Wiring optimistic di board hooks (useMoveTask, useReorderList)
