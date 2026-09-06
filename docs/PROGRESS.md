@@ -43,7 +43,7 @@ Status: **in-progress** (plan siap, implementasi belum dimulai)
 - [x] Task 4: Refactor query task ke project scope
 - [x] Task 5: Wiring optimistic di board hooks (useMoveTask, useReorderList)
 - [x] Task 6: UI drag & drop board (cross-list + within-list + reorder list)
-- [ ] Task 7: Komponen Markdown editor (write/preview/split)
+- [x] Task 7: Komponen Markdown editor (write/preview/split)
 - [ ] Task 8: QA akhir + verifikasi + update PROGRESS/CHANGELOG/MEMORY
 
 ## Deployment
