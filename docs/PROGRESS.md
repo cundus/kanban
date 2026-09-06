@@ -34,8 +34,8 @@ Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase2-dnd-markdown.md
 Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase2-design.md
 Status: **in-progress** (plan siap, implementasi belum dimulai)
 
-- [ ] Task 0: Prasyarat (verifikasi baseline, branch kerja)
-- [ ] Task 1: Dependencies (@dnd-kit + sonner) + mount Toaster
+- [x] Task 0: Prasyarat (verifikasi baseline, branch kerja)
+- [x] Task 1: Dependencies (@dnd-kit + sonner) + mount Toaster
 - [ ] Task 2: Migrasi fractional position (double precision) + regen types
 - [ ] Task 3: Utilitas fractional index + self-check
 - [ ] Task 4: Refactor query task ke project scope
