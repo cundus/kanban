@@ -32,13 +32,13 @@ Status: **deployed to production** — https://kanban.cundus.my.id
 ## Fase 2 — Drag & Drop + Markdown Editor
 Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase2-dnd-markdown.md
 Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase2-design.md
-Status: **kode selesai — di-merge ke `main` (commit `98121b0`) dan ter-deploy live via webhook pada 2026-09-06 (https://kanban.cundus.my.id, bundle `index-BbItJkpg.js`). E2E manual & RLS 2-akun pending maintainer; migrasi live belum di-apply (nunggu `DATABASE_URL`)**
+Status: **kode selesai — di-merge ke `main` (commit `98121b0`) dan ter-deploy live via webhook pada 2026-09-06 (https://kanban.cundus.my.id, bundle `index-BbItJkpg.js`). Migrasi DB live sudah di-apply pada 2026-09-06. Sisa pending: E2E manual (Task 8 Step 4) & RLS 2-akun (Task 8 Step 5)**
 
 - [x] Task 0: Prasyarat (verifikasi baseline, branch kerja)
 - [x] Task 1: Dependencies (@dnd-kit + sonner) + mount Toaster
-- [ ] Task 2: Migrasi fractional position (double precision) + regen types
+- [x] Task 2: Migrasi fractional position (double precision) + regen types
   - Step 1,3-5 selesai: file migrasi `20260906010000_fractional_positions.sql` ditulis, `database.types.ts` diperbarui manual (Supabase CLI tidak terpasang, `position` tetap `number`), `tsc -b` exit 0, commit `feat: migrate list/task position to fractional double precision`.
-  - Step 2 (apply migrasi ke DB live) **pending** — menunggu `DATABASE_URL`; maintainer akan menerapkan via `scripts/migrate.mjs`. Checkbox tetap belum dicentang sampai migrasi diterapkan.
+  - Step 2 selesai — migrasi sudah di-apply ke live Supabase project pada 2026-09-06 via `pnpm migrate baseline init` + `pnpm migrate:up` (session pooler aws-0-ap-southeast-1, port 5432); terverifikasi kolom `lists.position` & `tasks.position` kini `double precision`.
 - [x] Task 3: Utilitas fractional index + self-check
 - [x] Task 4: Refactor query task ke project scope
 - [x] Task 5: Wiring optimistic di board hooks (useMoveTask, useReorderList)

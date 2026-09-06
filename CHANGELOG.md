@@ -17,9 +17,9 @@
 ### Deployed
 - Fase 2 code merged to `main` (`98121b0`) and auto-deployed live on 2026-09-06 via the VPS webhook
   (push to `main` → pull, `pnpm install --frozen-lockfile`, `pnpm build`, rsync into the web root)
-- DB migration `supabase/migrations/20260906010000_fractional_positions.sql` is written but **not yet
-  applied** to the live Supabase project — pending `DATABASE_URL`; until it runs, `position` stays
-  `integer` on the live database
+- DB migration `supabase/migrations/20260906010000_fractional_positions.sql` is now **applied** to the
+  live Supabase project on 2026-09-06 via `scripts/migrate.mjs` (session pooler ap-southeast-1);
+  `lists.position` and `tasks.position` are `double precision` on the live database
 - Live at https://kanban.cundus.my.id — deployed bundle `index-BbItJkpg.js`
 
 ## [Fase 1] - 2026-09-06
