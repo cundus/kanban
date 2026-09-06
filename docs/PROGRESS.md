@@ -35,28 +35,61 @@ Status: **deployed to production** — https://kanban.cundus.my.id
 |---|---|
 | URL | https://kanban.cundus.my.id (HTTP 200) |
 | Supabase project ref | `nbcgglhxqtgewtoeqbnf` |
-| VPS path | `/var/www/kanban/` behind the existing reverse proxy |
-| Auto deploy | `.github/workflows/deploy.yml` — **currently non-functional**, see below |
-| Manual deploy | `deploy.ps1` — `pnpm build` + scp, then chmod 755/644 (scp inherits a 700 umask that blocks nginx). **This is the working deploy path.** |
-
-`deploy.ps1` is **gitignored on purpose** and is not in the repository. `cundus/kanban` is a public repo, so
-the VPS host, user, and key path are kept out of it entirely rather than being parameterised — the script
-holds them literally, and lives only on the maintainer's machine alongside `.vps-access.local.md`.
+| Served from | `/var/www/kanban/`, by the nginx already running on the VPS |
+| **Auto deploy** | **VPS webhook** — push to `main` → the VPS pulls, builds, and rsyncs. ~8 s end to end |
+| Manual deploy | `deploy.ps1` — gitignored, lives only on the maintainer's machine. Fallback |
+| GitHub Actions | `.github/workflows/deploy.yml` — non-functional, see below |
 
 Hosting stays on the VPS. Cloudflare Pages and other external build hosts were considered and declined.
+
+### Auto deploy via webhook
+
+A small Python webhook server (stdlib only, ~13 MB RSS) already existed on the VPS to deploy another
+project. It was extended to route by URL path so one process serves several repos, and moved to
+`/opt/deploy-webhook/` — it previously lived inside the other project's git repo, where that repo's own
+`git pull` would have overwritten it.
+
+- Targets are declared in `/etc/deploy-webhook/targets.json`; each has its own secret, directory, branch
+  and deploy command, and its own concurrency lock, so one project's slow deploy can't block another's.
+- Secrets live in `/etc/deploy-webhook/deploy-webhook.env`, mode 0600. They used to sit in the systemd
+  unit, which is world-readable at 644.
+- Every request is HMAC-verified. A target whose secret is missing is dropped at load rather than
+  running unauthenticated; if the config file is unusable the server falls back to the previous
+  single-target behaviour instead of going dark.
+- The kanban deploy is: `git pull` → `pnpm install --frozen-lockfile` → `pnpm build` →
+  `rsync -a --delete --chmod=D755,F644 dist/ /var/www/kanban/`. The `--chmod` replaces the old
+  `find … -exec chmod` pair: scp/rsync would otherwise inherit a 700 umask that blocks nginx from reading.
+
+The VPS now has Node 22 and pnpm 9 installed (~309 MB of `node_modules`) so it can build the site itself.
 
 ### GitHub Actions is blocked
 
 Both workflow runs failed with zero steps executed: *"The job was not started because your account is
 locked due to a billing issue."* This is an account-level lock, not exhausted minutes — a public repo gets
 free unlimited Actions minutes, so repo visibility is irrelevant here, and self-hosted runners are blocked
-by the same lock. The workflow YAML itself is fine and will work unchanged once billing clears.
+by the same lock. The workflow YAML itself is fine and will work unchanged once billing clears. It is kept
+for that reason, but the webhook above is now the real deploy path.
 
-Deployment alternatives that sidestep GitHub Actions entirely, if the lock persists:
-- **Cloudflare Pages / Netlify** — connect via their GitHub App (webhook, not Actions), build on their
-  infrastructure, point `kanban.cundus.my.id` at it by CNAME. Drops VPS involvement to literally zero.
-- Building on the VPS via `git pull` is **not** recommended: a Vite build spikes hundreds of MB of RAM on a
-  2-core/4GB box that is already loaded, which is exactly what PRD §6 sets out to avoid.
+### VPS reality vs what the PRD assumed — measured 6 September 2026
+
+The PRD describes a box "already running many other applications" and budgets accordingly. That was
+anticipation, not measurement. Measured:
+
+| PRD assumed | Measured |
+|---|---|
+| 2 core / 4 GB | 2× AMD EPYC 9754, 3.6 GiB |
+| Already crowded | 772 MB used, **2.8 GB available**, load 0.40/core |
+| (swap not mentioned) | 1.9 GB swap, **0 B used** |
+| — | 59 GB disk, 42% used |
+
+A full build on the VPS: `pnpm install` 8 s, `pnpm build` 6 s, peak Node RSS **508 MB**, and
+`MemAvailable` never fell below **2,342 MB** with zero swap touched.
+
+So building on the VPS is comfortable, contrary to the caution the PRD's assumption implies. Kanban's
+steady-state footprint is still effectively zero — no process of its own, just static files on the nginx
+that was already running, plus the shared webhook listener.
+
+Also running on the box: another project's Next.js + FastAPI + Postgres stack in Docker, nginx, fail2ban.
 
 ## Live verification — 6 September 2026
 

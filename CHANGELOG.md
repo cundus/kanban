@@ -13,6 +13,11 @@
   (tables + RLS policies) applied to the live database
 - GitHub Actions workflow added (`.github/workflows/deploy.yml`), but it does not run: the account is
   locked for billing, so every job fails before its first step. Correct as written; resumes when that clears
-- Deploys are done with a local, gitignored PowerShell script — build, scp `dist/`, then chmod 755/644 to
-  undo scp's restrictive default umask, which had blocked nginx from reading the files
+- Auto deploy instead runs as a webhook on the VPS: push to `main` triggers pull, install, build, and an
+  rsync into the web root, in about 8 seconds. The existing single-project webhook server was extended to
+  route by URL path, moved out of the other project's git repo, and had its secrets moved from the
+  world-readable systemd unit into a 0600 environment file
+- A local, gitignored PowerShell script remains as the manual fallback
+- Both deploy paths force 755/644 on the web root, since rsync/scp inherit an umask that had left the
+  files unreadable by nginx
 - Live at https://kanban.cundus.my.id — static files only, no backend process on the VPS
