@@ -32,7 +32,7 @@ Status: **deployed to production** — https://kanban.cundus.my.id
 ## Fase 2 — Drag & Drop + Markdown Editor
 Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase2-dnd-markdown.md
 Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase2-design.md
-Status: **in-progress** (plan siap, implementasi belum dimulai)
+Status: **done (kode) — E2E manual & RLS 2-akun pending maintainer; migrasi live belum di-apply (nunggu DATABASE_URL)**
 
 - [x] Task 0: Prasyarat (verifikasi baseline, branch kerja)
 - [x] Task 1: Dependencies (@dnd-kit + sonner) + mount Toaster
@@ -44,7 +44,13 @@ Status: **in-progress** (plan siap, implementasi belum dimulai)
 - [x] Task 5: Wiring optimistic di board hooks (useMoveTask, useReorderList)
 - [x] Task 6: UI drag & drop board (cross-list + within-list + reorder list)
 - [x] Task 7: Komponen Markdown editor (write/preview/split)
-- [ ] Task 8: QA akhir + verifikasi + update PROGRESS/CHANGELOG/MEMORY
+- [x] Task 8: QA akhir + verifikasi + update PROGRESS/CHANGELOG/MEMORY
+  - [x] Step 1: Typecheck (`pnpm exec tsc -b`) — exit 0
+  - [x] Step 2: Production build (`pnpm build`) — exit 0, `dist/` hanya `index.html` + `assets/` (JS/CSS/woff2)
+  - [x] Step 3: Self-check util posisi (`pnpm dlx tsx src/features/board/reorderUtils.selfcheck.ts`) — 13/13 PASS, exit 0
+  - [ ] Step 4: Walkthrough E2E manual (`pnpm dev`) — **pending maintainer**: butuh browser + sesi login, belum dijalankan agen.
+  - [ ] Step 5: RLS regresi 2 akun Google — **pending maintainer**: butuh dua akun Google + incognito, belum dijalankan agen.
+  - [x] Step 6-9: PROGRESS/CHANGELOG/MEMORY diperbarui, commit final dibuat.
 
 ## Deployment
 

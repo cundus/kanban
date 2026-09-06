@@ -1,5 +1,19 @@
 # Changelog
 
+## [Fase 2] - 2026-09-06
+### Added
+- Drag & drop task antar kolom dan reorder dalam kolom (@dnd-kit)
+- Drag & drop untuk mengurutkan kolom/list
+- Editor markdown deskripsi task: mode Write / Preview / Split
+- Toast error (sonner) untuk kegagalan aksi board
+
+### Changed
+- Urutan list/task kini memakai fractional index (double precision) — satu drag hanya meng-update 1–2 baris
+- Perpindahan task/list bersifat optimistic dengan rollback saat gagal
+
+### Removed
+- Tombol reorder ↑/↓ pada task dan list (digantikan drag & drop)
+
 ## [Fase 1] - 2026-09-06
 ### Added
 - Login via Google (Supabase Auth)

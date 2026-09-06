@@ -1,18 +1,18 @@
 # Memory — Cross-Session Context
 
 ## Key Decisions
-- **Position column is INTEGER in Fase 1**, not fractional index. Reorder = swap position value with neighbor via `swapPosition()` in `src/features/board/reorderUtils.ts`. Upgrade path to fractional index + drag-drop is Fase 2 — see spec §4.
+- **Position kini `double precision` (fractional index, midpoint `POSITION_STEP=1024`)** sejak Fase 2, migrasi `supabase/migrations/20260906010000_fractional_positions.sql` (belum di-apply ke DB live — nunggu `DATABASE_URL`). Helper di `src/features/board/reorderUtils.ts`: `positionAtEnd` / `positionBetween` / `positionForIndex` / `needsRebalance` / `rebalance`. `swapPosition()` lama masih diekspor untuk self-check tapi tak lagi dipakai runtime.
 - **No `project_members` table in Fase 1.** RLS checks `projects.owner_id = auth.uid()` directly. Multi-user support (invite member) is Fase 3 — will require a new migration adding `project_members` and rewriting RLS policies to check membership instead of ownership.
 - **No formal test framework in Fase 1.** Manual verification only, except for non-trivial pure logic (`reorderUtils.ts`) which has an assert-based self-check runnable via `pnpm dlx tsx src/features/board/reorderUtils.selfcheck.ts`.
 - **Route definitions live inline in `src/App.tsx`**, not a separate `src/routes/` folder — only 3 routes exist. Revisit if routing grows in Fase 3+.
-- **Mutations use invalidate-on-success, not optimistic updates**, even though TanStack Query was chosen partly to enable optimistic updates later. Fase 1 doesn't need the complexity; add `onMutate`/`onError` rollback when drag-drop (Fase 2) needs instant visual feedback.
-- **No toast library added.** Errors from mutations are not yet surfaced to the user beyond default TanStack Query error state (not wired to UI). Add error UI (or `sonner` toast) if this becomes a problem in QA.
+- **Mutasi board (move task, reorder list) kini optimistic** (`onMutate` cancel+snapshot, `onError` restore + `toast.error`, `onSettled` invalidate) sejak Fase 2. CRUD lain (project/list/task create/update/delete) masih invalidate-on-success.
+- **`sonner` ditambahkan di Fase 2** — satu `<Toaster richColors position="bottom-right" />` di `src/App.tsx`, dipakai di `onError` mutation board untuk menampilkan kegagalan drag + rollback.
+- **`useTasks` kini project-scoped (`['tasks', projectId]`), bukan per-list** — jadi satu sumber kebenaran untuk `DndContext` di `BoardPage`. `useReorderTask` dihapus, diganti `useMoveTask` (menangani reorder dalam list dan pindah antar list dalam satu mutation).
 - **Task 0 (Supabase project + Google OAuth) was a manual, user-performed step; it is now done.** Verified live on 6 Sep 2026: project ref `nbcgglhxqtgewtoeqbnf`, Google provider enabled, `.env.local` filled, and the init migration applied (all four Fase 1 tables present, `project_members` correctly absent). Most Fase 1 code was written and reviewed before this existed.
 - **Email/password auth is also enabled on the Supabase project**, though the PRD (§4.1) calls for Google-only. Not exploitable today because RLS scopes everything to `owner_id`, but disable it in the dashboard when convenient.
 
 ## Deferred (deliberately, not forgotten)
-- Drag & drop, fractional index — Fase 2
-- Markdown live split-view editor — Fase 2
+- Sanitasi HTML markdown (DOMPurify) ditunda ke Fase 3, saat konten bisa berasal dari member lain (Fase 2 masih single-owner, jadi `dangerouslySetInnerHTML` dari `marked` aman untuk sekarang)
 - Invite member, multi-user RLS (`project_members`) — Fase 3
 - Import/export JSON — Fase 4
 - Due date reminders, labels, dark mode, attachments, activity log — Fase 5
@@ -45,3 +45,5 @@
 - PRD: docs/PRD-Personal-Kanban-App.md
 - Fase 1 spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase1-design.md
 - Fase 1 plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase1-mvp.md
+- Fase 2 spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase2-design.md
+- Fase 2 plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase2-dnd-markdown.md
