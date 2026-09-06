@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
 import type { Database } from "@/types/database.types"
 import { positionAtEnd } from "./reorderUtils"
@@ -90,6 +91,47 @@ export function useDeleteTask(projectId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tasksKey(projectId) })
+    },
+  })
+}
+
+/**
+ * Satu mutation untuk reorder task dalam list DAN pindah antar list.
+ * Optimistic: patch cache di `onMutate`, rollback + toast di `onError`.
+ */
+export function useMoveTask(projectId: string) {
+  const queryClient = useQueryClient()
+  const key = tasksKey(projectId)
+  return useMutation({
+    mutationFn: async (input: {
+      taskId: string
+      toListId: string
+      newPosition: number
+    }) => {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ list_id: input.toListId, position: input.newPosition })
+        .eq("id", input.taskId)
+      if (error) throw error
+    },
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: key })
+      const previous = queryClient.getQueryData<Task[]>(key)
+      queryClient.setQueryData<Task[]>(key, (old) =>
+        (old ?? []).map((t) =>
+          t.id === input.taskId
+            ? { ...t, list_id: input.toListId, position: input.newPosition }
+            : t
+        )
+      )
+      return { previous }
+    },
+    onError: (_err, _input, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(key, ctx.previous)
+      toast.error("Gagal memindahkan task. Perubahan dibatalkan.")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: key })
     },
   })
 }

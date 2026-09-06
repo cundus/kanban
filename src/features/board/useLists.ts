@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
 import type { Database } from "@/types/database.types"
-import { swapPosition } from "./reorderUtils"
 
 type List = Database["public"]["Tables"]["lists"]["Row"]
 
@@ -74,21 +74,37 @@ export function useDeleteList(projectId: string) {
   })
 }
 
+/**
+ * Reorder list secara optimistic: patch `position` di cache pada `onMutate`,
+ * rollback snapshot + toast pada `onError`.
+ */
 export function useReorderList(projectId: string) {
   const queryClient = useQueryClient()
+  const key = listsKey(projectId)
   return useMutation({
-    mutationFn: async (input: { listId: string; direction: "up" | "down" }) => {
-      const lists = queryClient.getQueryData<List[]>(listsKey(projectId)) ?? []
-      const index = lists.findIndex((l) => l.id === input.listId)
-      const swapped = swapPosition(lists, index, input.direction)
-      if (!swapped) return
-
-      const [a, b] = swapped
-      const { error } = await supabase.from("lists").upsert([a, b])
+    mutationFn: async (input: { listId: string; newPosition: number }) => {
+      const { error } = await supabase
+        .from("lists")
+        .update({ position: input.newPosition })
+        .eq("id", input.listId)
       if (error) throw error
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: listsKey(projectId) })
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: key })
+      const previous = queryClient.getQueryData<List[]>(key)
+      queryClient.setQueryData<List[]>(key, (old) =>
+        (old ?? []).map((l) =>
+          l.id === input.listId ? { ...l, position: input.newPosition } : l
+        )
+      )
+      return { previous }
+    },
+    onError: (_err, _input, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(key, ctx.previous)
+      toast.error("Gagal mengurutkan list. Perubahan dibatalkan.")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: key })
     },
   })
 }
