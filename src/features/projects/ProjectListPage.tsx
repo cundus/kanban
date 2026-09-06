@@ -80,6 +80,7 @@ export function ProjectListPage() {
           <ProjectCard
             key={project.id}
             project={project}
+            isOwner={project.isOwner}
             onEdit={openEditDialog}
             onDelete={(id) => deleteProject.mutate(id)}
           />

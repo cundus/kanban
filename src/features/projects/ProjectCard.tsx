@@ -13,10 +13,12 @@ type Project = Database["public"]["Tables"]["projects"]["Row"]
 
 export function ProjectCard({
   project,
+  isOwner,
   onEdit,
   onDelete,
 }: {
   project: Project
+  isOwner: boolean
   onEdit: (project: Project) => void
   onDelete: (id: string) => void
 }) {
@@ -25,7 +27,18 @@ export function ProjectCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{project.name}</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle>{project.name}</CardTitle>
+          {isOwner ? (
+            <span className="shrink-0 rounded-md bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">
+              Owner
+            </span>
+          ) : (
+            <span className="shrink-0 rounded-md border px-1.5 py-0.5 text-xs text-muted-foreground">
+              Member
+            </span>
+          )}
+        </div>
         {project.description && (
           <CardDescription>{project.description}</CardDescription>
         )}
@@ -34,14 +47,16 @@ export function ProjectCard({
         <Button variant="outline" onClick={() => navigate(`/projects/${project.id}`)}>
           Open
         </Button>
-        <div className="flex gap-2">
-          <Button variant="ghost" onClick={() => onEdit(project)}>
-            Edit
-          </Button>
-          <Button variant="ghost" onClick={() => onDelete(project.id)}>
-            Delete
-          </Button>
-        </div>
+        {isOwner && (
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => onEdit(project)}>
+              Edit
+            </Button>
+            <Button variant="ghost" onClick={() => onDelete(project.id)}>
+              Delete
+            </Button>
+          </div>
+        )}
       </CardFooter>
     </Card>
   )
