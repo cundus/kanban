@@ -5,3 +5,4 @@ dist/
 .env
 .env.local
 *.log
+.vps-access.local.md
