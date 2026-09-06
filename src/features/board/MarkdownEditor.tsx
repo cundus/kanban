@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { marked } from "marked"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { renderMarkdown } from "./markdown"
 
 type Mode = "write" | "preview" | "split"
 
@@ -15,7 +15,7 @@ export function MarkdownEditor({
   minRows?: number
 }) {
   const [mode, setMode] = useState<Mode>("write")
-  const html = marked.parse(value || "") as string
+  const html = renderMarkdown(value)
 
   return (
     <div className="flex flex-col gap-2">

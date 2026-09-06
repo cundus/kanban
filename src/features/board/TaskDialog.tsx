@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
-import { marked } from "marked"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MarkdownEditor } from "./MarkdownEditor"
+import { renderMarkdown } from "./markdown"
 import {
   Dialog,
   DialogContent,
@@ -95,7 +95,7 @@ export function TaskDialog({
             ) : task.description_md ? (
               <div
                 className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: marked.parse(task.description_md) as string }}
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(task.description_md) }}
               />
             ) : (
               <p className="text-sm text-muted-foreground">No description</p>
