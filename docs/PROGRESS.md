@@ -40,7 +40,7 @@ Status: **in-progress** (plan siap, implementasi belum dimulai)
   - Step 1,3-5 selesai: file migrasi `20260906010000_fractional_positions.sql` ditulis, `database.types.ts` diperbarui manual (Supabase CLI tidak terpasang, `position` tetap `number`), `tsc -b` exit 0, commit `feat: migrate list/task position to fractional double precision`.
   - Step 2 (apply migrasi ke DB live) **pending** — menunggu `DATABASE_URL`; maintainer akan menerapkan via `scripts/migrate.mjs`. Checkbox tetap belum dicentang sampai migrasi diterapkan.
 - [x] Task 3: Utilitas fractional index + self-check
-- [ ] Task 4: Refactor query task ke project scope
+- [x] Task 4: Refactor query task ke project scope
 - [ ] Task 5: Wiring optimistic di board hooks (useMoveTask, useReorderList)
 - [ ] Task 6: UI drag & drop board (cross-list + within-list + reorder list)
 - [ ] Task 7: Komponen Markdown editor (write/preview/split)
