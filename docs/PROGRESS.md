@@ -26,8 +26,23 @@ Status: **deployed to production** — https://kanban.cundus.my.id
   - [x] Typecheck (`tsc -p tsconfig.app.json --noEmit`) — 0 errors
   - [x] Production build (`pnpm build`) — succeeds, static-only output in `dist/`
   - [x] Reorder self-check — 4/4 PASS
-  - [ ] Manual E2E walkthrough — **still open**, needs a human browser session (Google login → project → list → task → markdown)
+  - [x] Manual E2E walkthrough — **done by master on 6 Sep 2026** (Google login → project → list → task → markdown)
   - [ ] RLS isolation check (two accounts) — **partially verified**, see below
+
+## Fase 2 — Drag & Drop + Markdown Editor
+Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase2-dnd-markdown.md
+Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase2-design.md
+Status: **in-progress** (plan siap, implementasi belum dimulai)
+
+- [ ] Task 0: Prasyarat (verifikasi baseline, branch kerja)
+- [ ] Task 1: Dependencies (@dnd-kit + sonner) + mount Toaster
+- [ ] Task 2: Migrasi fractional position (double precision) + regen types
+- [ ] Task 3: Utilitas fractional index + self-check
+- [ ] Task 4: Refactor query task ke project scope
+- [ ] Task 5: Wiring optimistic di board hooks (useMoveTask, useReorderList)
+- [ ] Task 6: UI drag & drop board (cross-list + within-list + reorder list)
+- [ ] Task 7: Komponen Markdown editor (write/preview/split)
+- [ ] Task 8: QA akhir + verifikasi + update PROGRESS/CHANGELOG/MEMORY
 
 ## Deployment
 

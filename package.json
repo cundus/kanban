@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "migrate": "node scripts/migrate.mjs",
+    "migrate:status": "node scripts/migrate.mjs status",
+    "migrate:up": "node scripts/migrate.mjs up"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -34,6 +37,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.1.0",
     "oxlint": "^1.79.0",
+    "pg": "^8.23.0",
     "typescript": "~5.9.3",
     "vite": "^8.2.2"
   }
