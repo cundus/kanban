@@ -24,6 +24,7 @@
 - Package manager: pnpm only (do not use npm/yarn lockfiles)
 
 ## Deployment
+- **Fase 2 sudah live.** `main` kini di `98121b0`; di-merge dan auto-deployed live pada 2026-09-06 via webhook, bundle terpasang `index-BbItJkpg.js`. Masih open: migrasi `20260906010000_fractional_positions.sql` **belum di-apply** ke Supabase live (nunggu `DATABASE_URL`), walkthrough E2E manual & regresi RLS 2-akun (pending maintainer).
 - Live at **https://kanban.cundus.my.id**, static `dist/` served by the nginx already running on the VPS. Kanban runs no process of its own.
 - **Auto deploy is a webhook on the VPS, not GitHub Actions.** Push to `main` → the VPS pulls, `pnpm install --frozen-lockfile`, `pnpm build`, then rsyncs into `/var/www/kanban/`. ~8 s end to end.
 - The webhook server is shared with another project on the same box. It lives at `/opt/deploy-webhook/server.py`; targets in `/etc/deploy-webhook/targets.json`; secrets in `/etc/deploy-webhook/deploy-webhook.env` (0600). **It was moved out of the other project's git repo on purpose** — that repo's own `git pull` would overwrite it in place. Don't move it back.

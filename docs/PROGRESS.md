@@ -32,7 +32,7 @@ Status: **deployed to production** — https://kanban.cundus.my.id
 ## Fase 2 — Drag & Drop + Markdown Editor
 Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase2-dnd-markdown.md
 Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase2-design.md
-Status: **done (kode) — E2E manual & RLS 2-akun pending maintainer; migrasi live belum di-apply (nunggu DATABASE_URL)**
+Status: **kode selesai — di-merge ke `main` (commit `98121b0`) dan ter-deploy live via webhook pada 2026-09-06 (https://kanban.cundus.my.id, bundle `index-BbItJkpg.js`). E2E manual & RLS 2-akun pending maintainer; migrasi live belum di-apply (nunggu `DATABASE_URL`)**
 
 - [x] Task 0: Prasyarat (verifikasi baseline, branch kerja)
 - [x] Task 1: Dependencies (@dnd-kit + sonner) + mount Toaster
@@ -62,6 +62,7 @@ Status: **done (kode) — E2E manual & RLS 2-akun pending maintainer; migrasi li
 | **Auto deploy** | **VPS webhook** — push to `main` → the VPS pulls, builds, and rsyncs. ~8 s end to end |
 | Manual deploy | `deploy.ps1` — gitignored, lives only on the maintainer's machine. Fallback |
 | GitHub Actions | `.github/workflows/deploy.yml` — non-functional, see below |
+| Fase 2 deploy | `main` `98121b0` auto-deployed live on 2026-09-06 via the webhook (bundle `index-BbItJkpg.js`). DB migration `20260906010000_fractional_positions.sql` is written but **not yet applied** to the live Supabase project — pending `DATABASE_URL` |
 
 Hosting stays on the VPS. Cloudflare Pages and other external build hosts were considered and declined.
 

@@ -14,6 +14,14 @@
 ### Removed
 - Tombol reorder ↑/↓ pada task dan list (digantikan drag & drop)
 
+### Deployed
+- Fase 2 code merged to `main` (`98121b0`) and auto-deployed live on 2026-09-06 via the VPS webhook
+  (push to `main` → pull, `pnpm install --frozen-lockfile`, `pnpm build`, rsync into the web root)
+- DB migration `supabase/migrations/20260906010000_fractional_positions.sql` is written but **not yet
+  applied** to the live Supabase project — pending `DATABASE_URL`; until it runs, `position` stays
+  `integer` on the live database
+- Live at https://kanban.cundus.my.id — deployed bundle `index-BbItJkpg.js`
+
 ## [Fase 1] - 2026-09-06
 ### Added
 - Login via Google (Supabase Auth)
