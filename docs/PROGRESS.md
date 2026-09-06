@@ -56,6 +56,13 @@ project. It was extended to route by URL path so one process serves several repo
 - Every request is HMAC-verified. A target whose secret is missing is dropped at load rather than
   running unauthenticated; if the config file is unusable the server falls back to the previous
   single-target behaviour instead of going dark.
+- The endpoint is **`https://deployer.cundus.my.id`**, an nginx vhost with a Let's Encrypt certificate
+  that proxies to the server. The server binds **`127.0.0.1` only** — nginx is the sole way in, so the
+  `X-Forwarded-For` it sets can be trusted for logging the real caller.
+- **No IP allowlist.** The port was previously exposed directly and firewalled to GitHub's published
+  webhook ranges. That list is a snapshot: when GitHub adds a range, deliveries are dropped by the
+  firewall with no error anywhere, and deploys stop silently. HMAC is the actual authentication and does
+  not care about source IP, so behind nginx on 443 the allowlist was removed rather than maintained.
 - The kanban deploy is: `git pull` → `pnpm install --frozen-lockfile` → `pnpm build` →
   `rsync -a --delete --chmod=D755,F644 dist/ /var/www/kanban/`. The `--chmod` replaces the old
   `find … -exec chmod` pair: scp/rsync would otherwise inherit a 700 umask that blocks nginx from reading.
