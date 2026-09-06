@@ -25,6 +25,8 @@ import { TaskDialog } from "./TaskDialog"
 import { positionBetween, positionForIndex } from "./reorderUtils"
 import { useCreateList, useLists, useReorderList } from "./useLists"
 import { useMoveTask, useTasks } from "./useTasks"
+import { useProject } from "@/features/projects/useProjects"
+import { MembersDialog } from "@/features/members/MembersDialog"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 type List = Database["public"]["Tables"]["lists"]["Row"]
@@ -40,11 +42,13 @@ export function BoardPage() {
 
   const { data: lists, isLoading } = useLists(projectId)
   const { data: allTasks } = useTasks(projectId)
+  const { data: project } = useProject(projectId)
   const createList = useCreateList(projectId)
   const moveTask = useMoveTask(projectId)
   const reorderList = useReorderList(projectId)
 
   const [newListName, setNewListName] = useState("")
+  const [membersOpen, setMembersOpen] = useState(false)
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [activeList, setActiveList] = useState<List | null>(null)
@@ -215,9 +219,15 @@ export function BoardPage() {
   return (
     <div className="flex h-svh flex-col p-6">
       <div className="mb-4 flex items-center justify-between">
-        <Button variant="ghost" onClick={() => navigate("/")}>
-          ← Back to projects
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => navigate("/")}>
+            ← Back to projects
+          </Button>
+          {project && <span className="font-medium">{project.name}</span>}
+          <Button variant="outline" onClick={() => setMembersOpen(true)}>
+            Members
+          </Button>
+        </div>
         <div className="flex gap-2">
           <Input
             placeholder="New list name"
@@ -279,6 +289,15 @@ export function BoardPage() {
           tasks={allTasks ?? []}
           projectId={projectId}
           onOpenChange={(open) => !open && setOpenTaskId(null)}
+        />
+      )}
+
+      {membersOpen && (
+        <MembersDialog
+          projectId={projectId}
+          projectName={project?.name ?? ""}
+          open={membersOpen}
+          onOpenChange={setMembersOpen}
         />
       )}
     </div>

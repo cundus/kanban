@@ -6,16 +6,47 @@ type Project = Database["public"]["Tables"]["projects"]["Row"]
 
 const PROJECTS_KEY = ["projects"] as const
 
+export type ProjectWithRole = Project & { isOwner: boolean }
+
 export function useProjects() {
   return useQuery({
     queryKey: PROJECTS_KEY,
-    queryFn: async () => {
+    queryFn: async (): Promise<ProjectWithRole[]> => {
+      const { data: userData } = await supabase.auth.getUser()
+      const uid = userData.user?.id ?? null
+
+      // RLS baru mengembalikan project milik sendiri + yang dibagikan.
       const { data, error } = await supabase
         .from("projects")
         .select("*")
         .order("created_at", { ascending: false })
       if (error) throw error
-      return data as Project[]
+
+      const rows = (data as Project[]).map((project) => ({
+        ...project,
+        isOwner: project.owner_id === uid,
+      }))
+      // Owned dulu, lalu shared; tie-break created_at desc.
+      rows.sort((a, b) => {
+        if (a.isOwner !== b.isOwner) return a.isOwner ? -1 : 1
+        return b.created_at.localeCompare(a.created_at)
+      })
+      return rows
+    },
+  })
+}
+
+export function useProject(projectId: string) {
+  return useQuery({
+    queryKey: ["project", projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", projectId)
+        .single()
+      if (error) throw error
+      return data as Project
     },
   })
 }
