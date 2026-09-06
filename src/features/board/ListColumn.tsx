@@ -1,4 +1,7 @@
 import { useState } from "react"
+import { useDroppable } from "@dnd-kit/core"
+import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Database } from "@/types/database.types"
@@ -14,15 +17,24 @@ export function ListColumn({
   projectId,
   tasks,
   onOpenTask,
+  overlay = false,
 }: {
   list: List
   projectId: string
   tasks: Task[]
   onOpenTask: (taskId: string) => void
+  overlay?: boolean
 }) {
   const createTask = useCreateTask(list.id, projectId)
   const renameList = useRenameList(projectId)
   const deleteList = useDeleteList(projectId)
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: list.id, data: { type: "list" } })
+  const { setNodeRef: setDropRef } = useDroppable({
+    id: `list-dropzone-${list.id}`,
+    data: { type: "list", listId: list.id },
+  })
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [name, setName] = useState(list.name)
@@ -42,8 +54,20 @@ export function ListColumn({
     })
   }
 
+  const style = overlay
+    ? undefined
+    : {
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }
+
   return (
-    <div className="flex w-72 shrink-0 flex-col gap-3 rounded-lg border bg-card p-3">
+    <div
+      ref={overlay ? undefined : setNodeRef}
+      style={style}
+      className="flex w-72 shrink-0 flex-col gap-3 rounded-lg border bg-card p-3"
+    >
       <div className="flex items-center justify-between gap-2">
         {isEditingName ? (
           <Input
@@ -55,8 +79,10 @@ export function ListColumn({
           />
         ) : (
           <h3
-            className="cursor-pointer truncate font-medium"
+            className="flex-1 cursor-grab truncate font-medium active:cursor-grabbing"
             onClick={() => setIsEditingName(true)}
+            {...(overlay ? {} : attributes)}
+            {...(overlay ? {} : listeners)}
           >
             {list.name}
           </h3>
@@ -68,10 +94,17 @@ export function ListColumn({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onOpen={() => onOpenTask(task.id)} />
-        ))}
+      <div ref={overlay ? undefined : setDropRef} className="flex min-h-2 flex-col gap-2">
+        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          {tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              listId={list.id}
+              onOpen={() => onOpenTask(task.id)}
+            />
+          ))}
+        </SortableContext>
       </div>
 
       <div className="flex gap-2">
