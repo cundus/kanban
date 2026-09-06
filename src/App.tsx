@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { Toaster } from "sonner"
 import { LoginPage } from "@/features/auth/LoginPage"
 import { AuthGuard } from "@/features/auth/AuthGuard"
 import { ProjectListPage } from "@/features/projects/ProjectListPage"
@@ -26,6 +27,7 @@ export function App() {
           }
         />
       </Routes>
+      <Toaster richColors position="bottom-right" />
     </BrowserRouter>
   )
 }
