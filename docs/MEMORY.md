@@ -2,7 +2,7 @@
 
 ## Key Decisions
 - **Position kini `double precision` (fractional index, midpoint `POSITION_STEP=1024`)** sejak Fase 2, migrasi `supabase/migrations/20260906010000_fractional_positions.sql` (sudah di-apply ke DB live pada 2026-09-06). Helper di `src/features/board/reorderUtils.ts`: `positionAtEnd` / `positionBetween` / `positionForIndex` / `needsRebalance` / `rebalance`. `swapPosition()` lama masih diekspor untuk self-check tapi tak lagi dipakai runtime.
-- **No `project_members` table in Fase 1.** RLS checks `projects.owner_id = auth.uid()` directly. Multi-user support (invite member) is Fase 3 — will require a new migration adding `project_members` and rewriting RLS policies to check membership instead of ownership.
+- **`project_members` + RLS berbasis keanggotaan sejak Fase 3**, migrasi `supabase/migrations/20260906020000_project_members_rls.sql` (**ditulis & di-review, belum di-apply ke DB live** per 2026-09-06 — pending `DATABASE_URL`/maintainer). Rekursi `projects ↔ project_members` dicegah fungsi `SECURITY DEFINER` milik `postgres`: `is_project_member(p_project)`, `is_project_owner(p_project)`, `shares_project_with(p_user)` — policy tabel lain tidak pernah query `project_members`/`projects` langsung. Trigger `on_project_created` (`handle_new_project()`) menambah baris owner `accepted` tiap project baru; ada backfill untuk project lama. Klaim undangan lewat RPC `claim_pending_invites()` (SECURITY DEFINER, cocokkan `invited_email` ↔ `auth.jwt()->>'email'`) dipanggil di `useAuth` pada `SIGNED_IN`. **Keputusan gating:** member boleh CRUD **list + task** (pelonggaran sadar dari PRD §4.2 "member = CRUD task" — board kolaboratif); owner-only tetap: hapus/rename project + invite/remove member + tidak ada policy UPDATE di `project_members`. Baris owner tak bisa dihapus manual (kedua policy DELETE mensyaratkan `role <> 'owner'`).
 - **No formal test framework in Fase 1.** Manual verification only, except for non-trivial pure logic (`reorderUtils.ts`) which has an assert-based self-check runnable via `pnpm dlx tsx src/features/board/reorderUtils.selfcheck.ts`.
 - **Route definitions live inline in `src/App.tsx`**, not a separate `src/routes/` folder — only 3 routes exist. Revisit if routing grows in Fase 3+.
 - **Mutasi board (move task, reorder list) kini optimistic** (`onMutate` cancel+snapshot, `onError` restore + `toast.error`, `onSettled` invalidate) sejak Fase 2. CRUD lain (project/list/task create/update/delete) masih invalidate-on-success.
@@ -12,19 +12,20 @@
 - **Email/password auth is also enabled on the Supabase project**, though the PRD (§4.1) calls for Google-only. Not exploitable today because RLS scopes everything to `owner_id`, but disable it in the dashboard when convenient.
 
 ## Deferred (deliberately, not forgotten)
-- Sanitasi HTML markdown (DOMPurify) ditunda ke Fase 3, saat konten bisa berasal dari member lain (Fase 2 masih single-owner, jadi `dangerouslySetInnerHTML` dari `marked` aman untuk sekarang)
-- Invite member, multi-user RLS (`project_members`) — Fase 3
+- ~~Sanitasi HTML markdown (DOMPurify)~~ — **selesai Fase 3**. `dompurify` (^3.4.15) membungkus output `marked` lewat helper `src/features/board/markdown.ts` (`renderMarkdown`), dipakai `TaskDialog` view + `MarkdownEditor` preview. Tak ada lagi `marked.parse` langsung ke `dangerouslySetInnerHTML`.
+- ~~Invite member, multi-user RLS (`project_members`)~~ — **kode selesai Fase 3** (branch `fase3-invite-member`); migrasi belum di-apply live, branch belum di-merge.
 - Import/export JSON — Fase 4
 - Due date reminders, labels, dark mode, attachments, activity log — Fase 5
 
 ## Conventions
-- Feature-based folders: `src/features/{auth,projects,board}/`
+- Feature-based folders: `src/features/{auth,projects,board,members}/` (`members/` sejak Fase 3)
 - One hook per Supabase table operation (query/create/update/delete/reorder), all via TanStack Query
 - shadcn/ui components live untouched in `src/components/ui/`; compose them in feature files
 - Package manager: pnpm only (do not use npm/yarn lockfiles)
 
 ## Deployment
 - **Fase 2 sudah live.** `main` kini di `98121b0`; di-merge dan auto-deployed live pada 2026-09-06 via webhook, bundle terpasang `index-BbItJkpg.js`. Migrasi `20260906010000_fractional_positions.sql` **sudah di-apply** ke Supabase live pada 2026-09-06 via `scripts/migrate.mjs` (session pooler ap-southeast-1). Masih open: walkthrough E2E manual & regresi RLS 2-akun (pending maintainer).
+- **Fase 3 belum live.** Kode selesai di branch `fase3-invite-member` (`tsc -b`/`pnpm build`/self-check hijau). Migrasi `20260906020000_project_members_rls.sql` **belum di-apply** ke Supabase live. Branch belum di-merge ke `main`. Pending maintainer: apply migrasi via `scripts/migrate.mjs`, E2E 2 akun Google + regresi RLS akun ketiga, lalu merge + deploy.
 - Live at **https://kanban.cundus.my.id**, static `dist/` served by the nginx already running on the VPS. Kanban runs no process of its own.
 - **Auto deploy is a webhook on the VPS, not GitHub Actions.** Push to `main` → the VPS pulls, `pnpm install --frozen-lockfile`, `pnpm build`, then rsyncs into `/var/www/kanban/`. ~8 s end to end.
 - The webhook server is shared with another project on the same box. It lives at `/opt/deploy-webhook/server.py`; targets in `/etc/deploy-webhook/targets.json`; secrets in `/etc/deploy-webhook/deploy-webhook.env` (0600). **It was moved out of the other project's git repo on purpose** — that repo's own `git pull` would overwrite it in place. Don't move it back.
@@ -48,3 +49,5 @@
 - Fase 1 plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase1-mvp.md
 - Fase 2 spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase2-design.md
 - Fase 2 plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase2-dnd-markdown.md
+- Fase 3 spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase3-design.md
+- Fase 3 plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase3-invite-member.md

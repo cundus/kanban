@@ -52,6 +52,29 @@ Status: **kode selesai — di-merge ke `main` (commit `98121b0`) dan ter-deploy 
   - [ ] Step 5: RLS regresi 2 akun Google — **pending maintainer**: butuh dua akun Google + incognito, belum dijalankan agen.
   - [x] Step 6-9: PROGRESS/CHANGELOG/MEMORY diperbarui, commit final dibuat.
 
+## Fase 3 — Invite Member + RLS Multi-User
+Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase3-invite-member.md
+Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase3-design.md
+Status: **kode selesai di branch `fase3-invite-member`.** Migrasi `20260906020000_project_members_rls.sql` siap di-apply tapi **belum** dijalankan ke DB live; branch **belum** di-merge/deploy. Sisa pending maintainer: E2E manual 2 akun, regresi RLS live 3 akun, apply migrasi, merge + deploy.
+
+- [x] Task 0: Prasyarat (baca spec/PRD/MEMORY, baseline hijau, branch kerja)
+- [x] Task 1: Migrasi `project_members` + fungsi `SECURITY DEFINER` + trigger owner-membership + backfill + RLS rewrite (`supabase/migrations/20260906020000_project_members_rls.sql`, commit `20cb97c`) — file ditulis & di-review; **apply ke DB live belum dijalankan** (butuh `DATABASE_URL`, pending maintainer)
+- [x] Task 2: Regen types manual — `project_members` Row/Insert/Update + signature fungsi RLS di `src/types/database.types.ts` (commit `18a7a1a`)
+- [x] Task 3: Klaim undangan saat `SIGNED_IN` (`claim_pending_invites` RPC) + `useMembership(projectId)` role hook (commit `f172c27`)
+- [x] Task 4: Fitur `members/` — `useMembers` (invite/remove/leave) + `MembersDialog` (commit `247149d`)
+- [x] Task 5: `BoardPage` — tombol Members + dialog di header, `useProject` ringan (commit `b95b33a`)
+- [x] Task 6: Daftar project — badge Owner/Member, sembunyikan Edit/Delete pada project shared (commit `aa95299`)
+- [x] Task 7: Sanitasi markdown DOMPurify — helper `src/features/board/markdown.ts` (`renderMarkdown`) dipakai `TaskDialog` view + `MarkdownEditor` preview (commit `6259a03`)
+- [ ] Task 8: QA akhir + verifikasi + dokumentasi
+  - [x] Step 1: Typecheck (`pnpm exec tsc -b`) — exit 0
+  - [x] Step 2: Production build (`pnpm build`) — exit 0, `dist/` static-only, bundle `index-BE1SbpUL.js` 252.60 kB (gzip 82.21 kB)
+  - [x] Step 3: Self-check util posisi (`pnpm dlx tsx src/features/board/reorderUtils.selfcheck.ts`) — 13/13 PASS
+  - [ ] Step 4: E2E manual 2 akun Google (owner + invitee) — **pending maintainer**: butuh akun Google kedua + incognito
+  - [ ] Step 5: Regresi RLS live (akun ketiga, cek tidak ada `infinite recursion detected in policy`) — **pending maintainer**: butuh migrasi ter-apply ke DB live + 3 akun
+  - [x] Step 6-9: PROGRESS/CHANGELOG/MEMORY diperbarui, commit dokumentasi dibuat
+- [ ] Apply migrasi `20260906020000_project_members_rls.sql` ke Supabase live — **pending maintainer**
+- [ ] Merge `fase3-invite-member` → `main` + deploy — **pending maintainer**
+
 ## Deployment
 
 | | |

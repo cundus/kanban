@@ -1,5 +1,23 @@
 # Changelog
 
+## [Fase 3] - 2026-09-06
+### Added
+- Invite member ke project lewat email (owner). Tanpa server email — owner membagikan link undangan manual
+- Undangan otomatis diterima saat orang yang diundang login Google dengan email yang sama (RPC `claim_pending_invites` pada `SIGNED_IN`)
+- Dialog kelola member: daftar member, badge role Owner/Member/Pending, remove member (owner), cancel invite + copy link (owner), leave project (member)
+- Badge Owner/Member pada daftar project; project yang dibagikan kini muncul untuk member
+
+### Changed
+- Otorisasi data kini berbasis keanggotaan (`project_members`), bukan lagi owner tunggal. Member boleh CRUD list & task; owner-only tetap: hapus/rename project + invite/remove member
+- Deskripsi task (markdown) kini disanitasi dengan DOMPurify sebelum dirender, karena konten bisa berasal dari member lain
+
+### Security
+- RLS ditulis ulang ke basis keanggotaan dengan fungsi `SECURITY DEFINER` anti-rekursi (`is_project_member`, `is_project_owner`, `shares_project_with`), trigger `on_project_created` untuk baris owner, dan backfill project lama
+- Hanya owner yang bisa hapus/rename project dan invite/remove member — ditegakkan di DB (RLS) dan disembunyikan di UI
+
+### Pending
+- Kode selesai di branch `fase3-invite-member`. Migrasi `supabase/migrations/20260906020000_project_members_rls.sql` **belum di-apply** ke Supabase live; branch belum di-merge. Deploy + apply migrasi menyusul (pending maintainer, butuh `DATABASE_URL` + 2–3 akun Google untuk E2E/RLS)
+
 ## [Fase 2] - 2026-09-06
 ### Added
 - Drag & drop task antar kolom dan reorder dalam kolom (@dnd-kit)
