@@ -2,8 +2,7 @@
 .omo/
 node_modules/
 dist/
-.env
-.env.local
 *.log
 .vps-access.local.md
 deploy.ps1
+config.bat

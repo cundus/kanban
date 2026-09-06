@@ -3,13 +3,19 @@ import { useNavigate, useParams } from "react-router-dom"
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core"
-import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable"
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Database } from "@/types/database.types"
@@ -44,8 +50,13 @@ export function BoardPage() {
   const [activeList, setActiveList] = useState<List | null>(null)
   const [dndTasks, setDndTasks] = useState<Task[] | null>(null)
 
+  // Mouse: start drag after a small move. Touch: require a short press-and-hold
+  // before dragging so that plain swipes still scroll the board/list normally.
+  // Keyboard: preserve accessible drag via arrow keys.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
   const effectiveTasks = dndTasks ?? allTasks ?? []
