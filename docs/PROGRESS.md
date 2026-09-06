@@ -41,7 +41,7 @@ Status: **in-progress** (plan siap, implementasi belum dimulai)
   - Step 2 (apply migrasi ke DB live) **pending** — menunggu `DATABASE_URL`; maintainer akan menerapkan via `scripts/migrate.mjs`. Checkbox tetap belum dicentang sampai migrasi diterapkan.
 - [x] Task 3: Utilitas fractional index + self-check
 - [x] Task 4: Refactor query task ke project scope
-- [ ] Task 5: Wiring optimistic di board hooks (useMoveTask, useReorderList)
+- [x] Task 5: Wiring optimistic di board hooks (useMoveTask, useReorderList)
 - [ ] Task 6: UI drag & drop board (cross-list + within-list + reorder list)
 - [ ] Task 7: Komponen Markdown editor (write/preview/split)
 - [ ] Task 8: QA akhir + verifikasi + update PROGRESS/CHANGELOG/MEMORY
