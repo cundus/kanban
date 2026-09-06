@@ -2,7 +2,7 @@
 
 ## Fase 1 — MVP
 Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase1-mvp.md
-Status: in-progress
+Status: code-complete, blocked on Task 0 for live verification
 
 - [ ] Task 0: Prerequisites (Supabase project + Google OAuth) — deferred, requires manual user action
 - [x] Task 1: Scaffold Vite + React + TypeScript
@@ -23,3 +23,8 @@ Status: in-progress
 - [x] Task 16: BoardPage assembly
 - [x] Task 17: Documentation scaffolding
 - [ ] Task 18: Final verification
+  - [x] Typecheck (`tsc -p tsconfig.app.json --noEmit`) — 0 errors
+  - [x] Production build (`pnpm build`) — succeeds, static-only output in `dist/`
+  - [x] Reorder self-check — 4/4 PASS
+  - [ ] Manual E2E walkthrough — blocked, requires Task 0 (live Supabase + Google OAuth)
+  - [ ] RLS isolation check (two accounts) — blocked, requires Task 0
