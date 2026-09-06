@@ -6,3 +6,4 @@ dist/
 .env.local
 *.log
 .vps-access.local.md
+deploy.ps1
