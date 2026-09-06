@@ -3,29 +3,26 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Database } from "@/types/database.types"
 import { TaskCard } from "./TaskCard"
-import { useDeleteList, useRenameList, useReorderList } from "./useLists"
-import { useCreateTask, useTasks } from "./useTasks"
+import { useDeleteList, useRenameList } from "./useLists"
+import { useCreateTask } from "./useTasks"
 
 type List = Database["public"]["Tables"]["lists"]["Row"]
+type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
 export function ListColumn({
   list,
   projectId,
-  isFirst,
-  isLast,
+  tasks,
   onOpenTask,
 }: {
   list: List
   projectId: string
-  isFirst: boolean
-  isLast: boolean
+  tasks: Task[]
   onOpenTask: (taskId: string) => void
 }) {
-  const { data: tasks } = useTasks(list.id)
-  const createTask = useCreateTask(list.id)
+  const createTask = useCreateTask(list.id, projectId)
   const renameList = useRenameList(projectId)
   const deleteList = useDeleteList(projectId)
-  const reorderList = useReorderList(projectId)
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [name, setName] = useState(list.name)
@@ -65,22 +62,6 @@ export function ListColumn({
           </h3>
         )}
         <div className="flex shrink-0 gap-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={isFirst}
-            onClick={() => reorderList.mutate({ listId: list.id, direction: "up" })}
-          >
-            ↑
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={isLast}
-            onClick={() => reorderList.mutate({ listId: list.id, direction: "down" })}
-          >
-            ↓
-          </Button>
           <Button size="sm" variant="ghost" onClick={() => deleteList.mutate(list.id)}>
             ✕
           </Button>
@@ -88,15 +69,8 @@ export function ListColumn({
       </div>
 
       <div className="flex flex-col gap-2">
-        {tasks?.map((task, index) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            listId={list.id}
-            isFirst={index === 0}
-            isLast={index === (tasks.length ?? 1) - 1}
-            onOpen={() => onOpenTask(task.id)}
-          />
+        {tasks.map((task) => (
+          <TaskCard key={task.id} task={task} onOpen={() => onOpenTask(task.id)} />
         ))}
       </div>
 

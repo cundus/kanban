@@ -17,17 +17,17 @@ type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
 export function TaskDialog({
   task,
-  listId,
+  projectId,
   open,
   onOpenChange,
 }: {
   task: Task | null
-  listId: string
+  projectId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const updateTask = useUpdateTask(listId)
-  const deleteTask = useDeleteTask(listId)
+  const updateTask = useUpdateTask(projectId)
+  const deleteTask = useDeleteTask(projectId)
 
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState("")

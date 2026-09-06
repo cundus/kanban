@@ -1,22 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/lib/supabase"
 import type { Database } from "@/types/database.types"
-import { swapPosition } from "./reorderUtils"
+import { positionAtEnd } from "./reorderUtils"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
-function tasksKey(listId: string) {
-  return ["tasks", listId] as const
+function tasksKey(projectId: string) {
+  return ["tasks", projectId] as const
 }
 
-export function useTasks(listId: string) {
+export function useTasks(projectId: string) {
   return useQuery({
-    queryKey: tasksKey(listId),
+    queryKey: tasksKey(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
-        .eq("list_id", listId)
+        .eq("project_id", projectId)
         .order("position", { ascending: true })
       if (error) throw error
       return data as Task[]
@@ -24,28 +24,22 @@ export function useTasks(listId: string) {
   })
 }
 
-export function useCreateTask(listId: string) {
+export function useCreateTask(listId: string, projectId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (title: string) => {
-      const { data: listRow, error: listError } = await supabase
-        .from("lists")
-        .select("project_id")
-        .eq("id", listId)
-        .single()
-      if (listError) throw listError
-
       const { data: userData, error: userError } = await supabase.auth.getUser()
       if (userError || !userData.user) throw userError ?? new Error("Not authenticated")
 
-      const existing = queryClient.getQueryData<Task[]>(tasksKey(listId)) ?? []
-      const nextPosition = existing.length > 0 ? Math.max(...existing.map((t) => t.position)) + 1 : 0
+      const all = queryClient.getQueryData<Task[]>(tasksKey(projectId)) ?? []
+      const inList = all.filter((t) => t.list_id === listId)
+      const nextPosition = positionAtEnd(inList)
 
       const { data, error } = await supabase
         .from("tasks")
         .insert({
           list_id: listId,
-          project_id: listRow.project_id,
+          project_id: projectId,
           title,
           position: nextPosition,
           created_by: userData.user.id,
@@ -56,12 +50,12 @@ export function useCreateTask(listId: string) {
       return data as Task
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tasksKey(listId) })
+      queryClient.invalidateQueries({ queryKey: tasksKey(projectId) })
     },
   })
 }
 
-export function useUpdateTask(listId: string) {
+export function useUpdateTask(projectId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (input: {
@@ -82,12 +76,12 @@ export function useUpdateTask(listId: string) {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tasksKey(listId) })
+      queryClient.invalidateQueries({ queryKey: tasksKey(projectId) })
     },
   })
 }
 
-export function useDeleteTask(listId: string) {
+export function useDeleteTask(projectId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
@@ -95,26 +89,7 @@ export function useDeleteTask(listId: string) {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tasksKey(listId) })
-    },
-  })
-}
-
-export function useReorderTask(listId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (input: { taskId: string; direction: "up" | "down" }) => {
-      const tasks = queryClient.getQueryData<Task[]>(tasksKey(listId)) ?? []
-      const index = tasks.findIndex((t) => t.id === input.taskId)
-      const swapped = swapPosition(tasks, index, input.direction)
-      if (!swapped) return
-
-      const [a, b] = swapped
-      const { error } = await supabase.from("tasks").upsert([a, b])
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tasksKey(listId) })
+      queryClient.invalidateQueries({ queryKey: tasksKey(projectId) })
     },
   })
 }

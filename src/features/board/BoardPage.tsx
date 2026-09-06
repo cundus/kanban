@@ -1,11 +1,14 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import type { Database } from "@/types/database.types"
 import { ListColumn } from "./ListColumn"
 import { TaskDialog } from "./TaskDialog"
 import { useCreateList, useLists } from "./useLists"
 import { useTasks } from "./useTasks"
+
+type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
 export function BoardPage() {
   const { id: projectId } = useParams<{ id: string }>()
@@ -17,10 +20,22 @@ export function BoardPage() {
   }
 
   const { data: lists, isLoading } = useLists(projectId)
+  const { data: allTasks } = useTasks(projectId)
   const createList = useCreateList(projectId)
 
   const [newListName, setNewListName] = useState("")
-  const [openTask, setOpenTask] = useState<{ taskId: string; listId: string } | null>(null)
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null)
+
+  const tasksByList = useMemo(() => {
+    const map = new Map<string, Task[]>()
+    for (const t of allTasks ?? []) {
+      const arr = map.get(t.list_id) ?? []
+      arr.push(t)
+      map.set(t.list_id, arr)
+    }
+    for (const arr of map.values()) arr.sort((a, b) => a.position - b.position)
+    return map
+  }, [allTasks])
 
   function handleAddList() {
     if (!newListName.trim()) return
@@ -47,23 +62,23 @@ export function BoardPage() {
       {isLoading && <p className="text-muted-foreground">Loading...</p>}
 
       <div className="flex flex-1 gap-4 overflow-x-auto">
-        {lists?.map((list, index) => (
+        {lists?.map((list) => (
           <ListColumn
             key={list.id}
             list={list}
             projectId={projectId}
-            isFirst={index === 0}
-            isLast={index === (lists.length ?? 1) - 1}
-            onOpenTask={(taskId) => setOpenTask({ taskId, listId: list.id })}
+            tasks={tasksByList.get(list.id) ?? []}
+            onOpenTask={(taskId) => setOpenTaskId(taskId)}
           />
         ))}
       </div>
 
-      {openTask && (
+      {openTaskId && (
         <TaskDialogForOpenTask
-          taskId={openTask.taskId}
-          listId={openTask.listId}
-          onOpenChange={(open) => !open && setOpenTask(null)}
+          taskId={openTaskId}
+          tasks={allTasks ?? []}
+          projectId={projectId}
+          onOpenChange={(open) => !open && setOpenTaskId(null)}
         />
       )}
     </div>
@@ -72,17 +87,18 @@ export function BoardPage() {
 
 function TaskDialogForOpenTask({
   taskId,
-  listId,
+  tasks,
+  projectId,
   onOpenChange,
 }: {
   taskId: string
-  listId: string
+  tasks: Task[]
+  projectId: string
   onOpenChange: (open: boolean) => void
 }) {
-  const { data: tasks } = useTasks(listId)
-  const task = tasks?.find((t) => t.id === taskId) ?? null
+  const task = tasks.find((t) => t.id === taskId) ?? null
 
   return (
-    <TaskDialog task={task} listId={listId} open={!!task} onOpenChange={onOpenChange} />
+    <TaskDialog task={task} projectId={projectId} open={!!task} onOpenChange={onOpenChange} />
   )
 }
