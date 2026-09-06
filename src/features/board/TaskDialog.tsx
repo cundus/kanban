@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { marked } from "marked"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { MarkdownEditor } from "./MarkdownEditor"
 import {
   Dialog,
   DialogContent,
@@ -91,12 +91,7 @@ export function TaskDialog({
           <div>
             <label className="mb-1 block text-sm text-muted-foreground">Description</label>
             {isEditing ? (
-              <Textarea
-                rows={8}
-                value={descriptionMd}
-                onChange={(e) => setDescriptionMd(e.target.value)}
-                placeholder="Markdown supported"
-              />
+              <MarkdownEditor value={descriptionMd} onChange={setDescriptionMd} />
             ) : task.description_md ? (
               <div
                 className="prose prose-sm max-w-none"
