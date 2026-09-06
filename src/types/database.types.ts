@@ -2,6 +2,8 @@
 
 export interface Database {
   public: {
+    Views: Record<string, never>
+    Functions: Record<string, never>
     Tables: {
       profiles: {
         Row: {
@@ -22,6 +24,7 @@ export interface Database {
           full_name?: string | null
           avatar_url?: string | null
         }
+        Relationships: []
       }
       projects: {
         Row: {
@@ -45,6 +48,7 @@ export interface Database {
           owner_id?: string
           created_at?: string
         }
+        Relationships: []
       }
       lists: {
         Row: {
@@ -65,6 +69,7 @@ export interface Database {
           name?: string
           position?: number
         }
+        Relationships: []
       }
       tasks: {
         Row: {
@@ -100,6 +105,7 @@ export interface Database {
           created_by?: string
           updated_at?: string
         }
+        Relationships: []
       }
     }
   }
