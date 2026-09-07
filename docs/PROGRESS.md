@@ -55,7 +55,7 @@ Status: **kode selesai — di-merge ke `main` (commit `98121b0`) dan ter-deploy 
 ## Fase 3 — Invite Member + RLS Multi-User
 Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase3-invite-member.md
 Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase3-design.md
-Status: **kode selesai di branch `fase3-invite-member`.** Migrasi `20260906020000_project_members_rls.sql` siap di-apply tapi **belum** dijalankan ke DB live; branch **belum** di-merge/deploy. Sisa pending maintainer: E2E manual 2 akun, regresi RLS live 3 akun, apply migrasi, merge + deploy.
+Status: **deployed to production pada 2026-09-07** — migrasi `20260906020000_project_members_rls.sql` sudah di-apply ke DB live (3/3 di `schema_migrations`, backfill owner OK), branch di-merge ke `main` (`41b196e`) dan auto-deploy live via webhook (bundle `index-DVijB2h6.js`, HTTP 200). Sisa pending maintainer: E2E manual 2 akun (Task 8 Step 4) & regresi RLS 3 akun (Task 8 Step 5).
 
 - [x] Task 0: Prasyarat (baca spec/PRD/MEMORY, baseline hijau, branch kerja)
 - [x] Task 1: Migrasi `project_members` + fungsi `SECURITY DEFINER` + trigger owner-membership + backfill + RLS rewrite (`supabase/migrations/20260906020000_project_members_rls.sql`, commit `20cb97c`) — file ditulis & di-review; **apply ke DB live belum dijalankan** (butuh `DATABASE_URL`, pending maintainer)
@@ -72,8 +72,8 @@ Status: **kode selesai di branch `fase3-invite-member`.** Migrasi `2026090602000
   - [ ] Step 4: E2E manual 2 akun Google (owner + invitee) — **pending maintainer**: butuh akun Google kedua + incognito
   - [ ] Step 5: Regresi RLS live (akun ketiga, cek tidak ada `infinite recursion detected in policy`) — **pending maintainer**: butuh migrasi ter-apply ke DB live + 3 akun
   - [x] Step 6-9: PROGRESS/CHANGELOG/MEMORY diperbarui, commit dokumentasi dibuat
-- [ ] Apply migrasi `20260906020000_project_members_rls.sql` ke Supabase live — **pending maintainer**
-- [ ] Merge `fase3-invite-member` → `main` + deploy — **pending maintainer**
+- [x] Apply migrasi `20260906020000_project_members_rls.sql` ke Supabase live — **selesai 2026-09-07** via `pnpm migrate:up` (session pooler aws-0-ap-southeast-1); terverifikasi tabel `project_members`, fungsi `is_project_member`/`is_project_owner`/`claim_pending_invites`, dan backfill owner project lama (`pcinta0@gmail.com` → owner/accepted)
+- [x] Merge `fase3-invite-member` → `main` + deploy — **selesai 2026-09-07** (`59b767a..41b196e` fast-forward, push `main` → auto-deploy webhook, HTTP 200, bundle `index-DVijB2h6.js`)
 
 ## Deployment
 
@@ -85,7 +85,8 @@ Status: **kode selesai di branch `fase3-invite-member`.** Migrasi `2026090602000
 | **Auto deploy** | **VPS webhook** — push to `main` → the VPS pulls, builds, and rsyncs. ~8 s end to end |
 | Manual deploy | `deploy.ps1` — gitignored, lives only on the maintainer's machine. Fallback |
 | GitHub Actions | `.github/workflows/deploy.yml` — non-functional, see below |
-| Fase 2 deploy | `main` `98121b0` auto-deployed live on 2026-09-06 via the webhook (bundle `index-BbItJkpg.js`). DB migration `20260906010000_fractional_positions.sql` is written but **not yet applied** to the live Supabase project — pending `DATABASE_URL` |
+| Fase 2 deploy | `main` `98121b0` (lalu `59b767a` fix mobile DnD) auto-deployed live via webhook pada 2026-09-06 (bundle `index-C9SpamEW.js`). DB migration `20260906010000_fractional_positions.sql` **sudah di-apply** live pada 2026-09-06 — kolom `lists.position` & `tasks.position` terverifikasi `double precision`. |
+| Fase 3 deploy | `main` `41b196e` auto-deployed live via webhook pada 2026-09-07 (bundle `index-DVijB2h6.js`, HTTP 200). DB migration `20260906020000_project_members_rls.sql` **sudah di-apply** live pada 2026-09-07 — tabel `project_members` + 3 fungsi + backfill owner OK. |
 
 Hosting stays on the VPS. Cloudflare Pages and other external build hosts were considered and declined.
 

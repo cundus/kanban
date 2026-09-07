@@ -1,6 +1,6 @@
 # Changelog
 
-## [Fase 3] - 2026-09-06
+## [Fase 3] - 2026-09-06 / 2026-09-07
 ### Added
 - Invite member ke project lewat email (owner). Tanpa server email — owner membagikan link undangan manual
 - Undangan otomatis diterima saat orang yang diundang login Google dengan email yang sama (RPC `claim_pending_invites` pada `SIGNED_IN`)
@@ -15,8 +15,10 @@
 - RLS ditulis ulang ke basis keanggotaan dengan fungsi `SECURITY DEFINER` anti-rekursi (`is_project_member`, `is_project_owner`, `shares_project_with`), trigger `on_project_created` untuk baris owner, dan backfill project lama
 - Hanya owner yang bisa hapus/rename project dan invite/remove member — ditegakkan di DB (RLS) dan disembunyikan di UI
 
-### Pending
-- Kode selesai di branch `fase3-invite-member`. Migrasi `supabase/migrations/20260906020000_project_members_rls.sql` **belum di-apply** ke Supabase live; branch belum di-merge. Deploy + apply migrasi menyusul (pending maintainer, butuh `DATABASE_URL` + 2–3 akun Google untuk E2E/RLS)
+### Status deploy (update 2026-09-07)
+- Migrasi `20260906020000_project_members_rls.sql` **sudah di-apply** ke Supabase live (`pnpm migrate:up`, 3/3 di `schema_migrations`); backfill owner project lama OK
+- Branch di-merge ke `main` (`41b196e`) dan auto-deploy live via webhook — **https://kanban.cundus.my.id** HTTP 200, bundle `index-DVijB2h6.js`
+- Sisa pending maintainer: E2E 2 akun Google (invite → claim otomatis) & regresi RLS 3 akun (cek bebas `infinite recursion`)
 
 ## [Fase 2] - 2026-09-06
 ### Added
