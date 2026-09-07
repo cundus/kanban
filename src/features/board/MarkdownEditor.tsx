@@ -45,7 +45,7 @@ export function MarkdownEditor({
         )}
         {(mode === "preview" || mode === "split") && (
           <div
-            className="prose prose-sm max-w-none rounded-md border p-3"
+            className="max-w-none rounded-md border border-line bg-surface-1 p-3 text-ui text-text-2"
             dangerouslySetInnerHTML={{ __html: html }}
           />
         )}

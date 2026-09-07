@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { MarkdownEditor } from "./MarkdownEditor"
 import { renderMarkdown } from "./markdown"
 import {
@@ -30,6 +32,7 @@ export function TaskDialog({
   const deleteTask = useDeleteTask(projectId)
 
   const [isEditing, setIsEditing] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [descriptionMd, setDescriptionMd] = useState("")
   const [dueDate, setDueDate] = useState("")
@@ -74,37 +77,40 @@ export function TaskDialog({
           )}
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Due date</label>
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="task-due-date">Due date</Label>
             {isEditing ? (
               <Input
+                id="task-due-date"
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
             ) : (
-              <p className="text-sm">{task.due_date ?? "No due date"}</p>
+              <p className="text-ui text-text-2" data-numeric>
+                {task.due_date ?? "No due date"}
+              </p>
             )}
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Description</label>
+          <div className="flex flex-col gap-1.5">
+            <Label>Description</Label>
             {isEditing ? (
               <MarkdownEditor value={descriptionMd} onChange={setDescriptionMd} />
             ) : task.description_md ? (
               <div
-                className="prose prose-sm max-w-none"
+                className="max-w-[65ch] text-ui text-text-2"
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(task.description_md) }}
               />
             ) : (
-              <p className="text-sm text-muted-foreground">No description</p>
+              <p className="text-ui text-text-3">No description</p>
             )}
           </div>
         </div>
 
         <DialogFooter className="flex justify-between sm:justify-between">
-          <Button variant="ghost" onClick={handleDelete}>
+          <Button variant="destructive" onClick={() => setConfirmOpen(true)}>
             Delete task
           </Button>
           {isEditing ? (
@@ -115,6 +121,14 @@ export function TaskDialog({
             </Button>
           )}
         </DialogFooter>
+
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={`Delete ${task.title}?`}
+          description="This task and its description are removed. This cannot be undone."
+          onConfirm={handleDelete}
+        />
       </DialogContent>
     </Dialog>
   )

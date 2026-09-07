@@ -33,7 +33,7 @@ export function ImportDialog({
     { name: string; lists: number; tasks: number } | null
   >(null)
 
-  // Reset seluruh state tiap kali dialog ditutup / dibuka ulang.
+  // Reset every field whenever the dialog closes so a reopen starts clean.
   useEffect(() => {
     if (!open) {
       setFileName(null)
@@ -53,7 +53,7 @@ export function ImportDialog({
     setSummary(null)
 
     if (file.size > MAX_FILE_BYTES) {
-      setParseErrors(["File terlalu besar (maks 2 MB)."])
+      setParseErrors(["File is larger than the 2 MB limit."])
       return
     }
 
@@ -61,7 +61,7 @@ export function ImportDialog({
     try {
       text = await file.text()
     } catch {
-      setParseErrors(["File tidak bisa dibaca."])
+      setParseErrors(["File could not be read."])
       return
     }
 
@@ -69,7 +69,7 @@ export function ImportDialog({
     try {
       parsed = JSON.parse(text)
     } catch {
-      setParseErrors(["File bukan JSON yang valid."])
+      setParseErrors(["File is not valid JSON."])
       return
     }
 
@@ -91,7 +91,7 @@ export function ImportDialog({
     importProject.mutate(validDoc, {
       onSuccess: ({ projectId }) => {
         onOpenChange(false)
-        toast.success("Project berhasil di-import.")
+        toast.success("Project imported.")
         navigate(`/projects/${projectId}`)
       },
     })
@@ -101,7 +101,7 @@ export function ImportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Import project dari file JSON</DialogTitle>
+          <DialogTitle>Import a project from JSON</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
@@ -109,21 +109,21 @@ export function ImportDialog({
             ref={inputRef}
             type="file"
             accept="application/json,.json"
-            aria-label="Pilih file JSON untuk di-import"
+            aria-label="Choose a JSON file to import"
             className="sr-only"
             onChange={(e) => void onFileChange(e)}
           />
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => inputRef.current?.click()}>
-              Pilih file
+              Choose file
             </Button>
-            <span className="truncate text-sm text-muted-foreground">
-              {fileName ?? "Belum ada file dipilih."}
+            <span className="truncate text-ui text-text-3">
+              {fileName ?? "No file selected"}
             </span>
           </div>
 
           {parseErrors.length > 0 && (
-            <ul className="flex list-disc flex-col gap-1 rounded-md bg-destructive/10 py-2 pr-3 pl-6 text-sm text-destructive">
+            <ul className="flex list-disc flex-col gap-1 rounded-md border border-danger bg-danger-soft py-2 pr-3 pl-6 text-label text-danger">
               {parseErrors.map((msg, i) => (
                 <li key={i}>{msg}</li>
               ))}
@@ -131,9 +131,10 @@ export function ImportDialog({
           )}
 
           {summary && (
-            <p className="text-sm text-muted-foreground">
-              Akan membuat project baru &ldquo;{summary.name}&rdquo; dengan{" "}
-              {summary.lists} list dan {summary.tasks} task.
+            <p className="text-ui text-text-3">
+              Creates a new project &ldquo;{summary.name}&rdquo; with{" "}
+              <span data-numeric>{summary.lists}</span> lists and{" "}
+              <span data-numeric>{summary.tasks}</span> tasks.
             </p>
           )}
         </div>
@@ -143,7 +144,7 @@ export function ImportDialog({
             onClick={handleImport}
             disabled={!validDoc || importProject.isPending}
           >
-            {importProject.isPending ? "Meng-import…" : "Import"}
+            {importProject.isPending ? "Importing…" : "Import"}
           </Button>
         </DialogFooter>
       </DialogContent>

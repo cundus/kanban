@@ -7,17 +7,28 @@ import {
   MouseSensor,
   TouchSensor,
   closestCorners,
+  defaultDropAnimationSideEffects,
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
-import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core"
+import type {
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  DropAnimation,
+} from "@dnd-kit/core"
 import {
   SortableContext,
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable"
+import { ArrowLeftIcon, Columns3Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tooltip } from "@/components/ui/tooltip"
+import { EmptyState } from "@/components/ui/empty-state"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import type { Database } from "@/types/database.types"
 import { ListColumn } from "./ListColumn"
 import { TaskCard } from "./TaskCard"
@@ -31,6 +42,17 @@ import { useExportProject } from "@/features/import-export/useExportProject"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 type List = Database["public"]["Tables"]["lists"]["Row"]
+
+// On drop isDragging flips false and the source would jump back to opacity 1
+// while the overlay is still flying. Holding it at 0 for the animation keeps a
+// single visible card.
+const dropAnimation: DropAnimation = {
+  duration: 200,
+  easing: "cubic-bezier(0.2, 0, 0, 1)",
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: { active: { opacity: "0" } },
+  }),
+}
 
 export function BoardPage() {
   const { id: projectId } = useParams<{ id: string }>()
@@ -189,8 +211,10 @@ export function BoardPage() {
       resolveContainer(base, overId) ??
       base.find((t) => t.id === activeId)?.list_id ??
       null
-    setDndTasks(null)
-    if (!toListId) return
+    if (!toListId) {
+      setDndTasks(null)
+      return
+    }
 
     const listTasks = base
       .filter((t) => t.list_id === toListId)
@@ -213,38 +237,62 @@ export function BoardPage() {
 
     const original = (allTasks ?? []).find((t) => t.id === activeId)
     if (original && original.list_id === toListId && original.position === newPosition) {
+      setDndTasks(null)
       return
     }
-    moveTask.mutate({ taskId: activeId, toListId, newPosition })
+
+    // onDragOver skips same-list drags, so the mirror can still hold the
+    // pre-drag order here. Commit the final placement before the drop animation
+    // measures, then release only once the optimistic cache patch has landed —
+    // useMoveTask awaits cancelQueries, so clearing earlier renders one frame at
+    // the old position.
+    setDndTasks(
+      base.map((t) =>
+        t.id === activeId ? { ...t, list_id: toListId, position: newPosition } : t
+      )
+    )
+    moveTask.mutate(
+      { taskId: activeId, toListId, newPosition },
+      { onSettled: () => setDndTasks(null) }
+    )
   }
 
   return (
-    <div className="flex h-svh flex-col p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => navigate("/")}>
-            ← Back to projects
-          </Button>
-          {project && <span className="font-medium">{project.name}</span>}
-          <Button variant="outline" onClick={() => setMembersOpen(true)}>
+    <div className="flex min-h-[100dvh] flex-col">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Tooltip label="Back to projects">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Back to projects"
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeftIcon size={16} strokeWidth={1.5} aria-hidden />
+            </Button>
+          </Tooltip>
+          <h1 className="text-heading text-text-1">{project?.name ?? "Board"}</h1>
+          <Button variant="ghost" onClick={() => setMembersOpen(true)}>
             Members
           </Button>
-          <Button variant="outline" onClick={() => void exportNow()}>
-            Export JSON
+          <Button variant="ghost" onClick={() => void exportNow()}>
+            Export
           </Button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Input
+            className="w-44"
             placeholder="New list name"
             value={newListName}
             onChange={(e) => setNewListName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAddList()}
           />
-          <Button onClick={handleAddList}>Add list</Button>
+          <Button onClick={handleAddList} disabled={!newListName.trim()}>
+            Add list
+          </Button>
+          <ThemeToggle />
         </div>
-      </div>
-
-      {isLoading && <p className="text-muted-foreground">Loading...</p>}
+      </header>
 
       <DndContext
         sensors={sensors}
@@ -254,21 +302,51 @@ export function BoardPage() {
         onDragEnd={onDragEnd}
         onDragCancel={onDragCancel}
       >
-        <div className="flex flex-1 gap-4 overflow-x-auto">
-          <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
-            {lists?.map((list) => (
-              <ListColumn
-                key={list.id}
-                list={list}
-                projectId={projectId}
-                tasks={tasksByList.get(list.id) ?? []}
-                onOpenTask={(taskId) => setOpenTaskId(taskId)}
-              />
-            ))}
-          </SortableContext>
-        </div>
+        <main
+          id="main"
+          className="flex flex-1 gap-4 overflow-x-auto px-6 py-6"
+          aria-busy={isLoading}
+        >
+          {isLoading ? (
+            Array.from({ length: 3 }, (_, i) => (
+              <div
+                key={i}
+                className="flex w-72 shrink-0 flex-col gap-3 rounded-lg border border-line bg-surface-1 p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-4 rounded-full" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  {Array.from({ length: 3 - i }, (_, j) => (
+                    <Skeleton key={j} className="h-14 w-full" />
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : lists?.length ? (
+            <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
+              {lists.map((list) => (
+                <ListColumn
+                  key={list.id}
+                  list={list}
+                  projectId={projectId}
+                  tasks={tasksByList.get(list.id) ?? []}
+                  onOpenTask={(taskId) => setOpenTaskId(taskId)}
+                />
+              ))}
+            </SortableContext>
+          ) : (
+            <EmptyState
+              className="flex-1"
+              icon={<Columns3Icon size={18} strokeWidth={1.5} aria-hidden />}
+              title="No lists yet"
+              description="Lists are the columns of this board. Name one above and press Add list to start."
+            />
+          )}
+        </main>
 
-        <DragOverlay>
+        <DragOverlay dropAnimation={dropAnimation}>
           {activeTask ? (
             <TaskCard
               task={activeTask}
