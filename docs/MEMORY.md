@@ -14,12 +14,14 @@
 ## Deferred (deliberately, not forgotten)
 - ~~Sanitasi HTML markdown (DOMPurify)~~ — **selesai Fase 3**. `dompurify` (^3.4.15) membungkus output `marked` lewat helper `src/features/board/markdown.ts` (`renderMarkdown`), dipakai `TaskDialog` view + `MarkdownEditor` preview. Tak ada lagi `marked.parse` langsung ke `dangerouslySetInnerHTML`.
 - ~~Invite member, multi-user RLS (`project_members`)~~ — **kode selesai Fase 3** (branch `fase3-invite-member`); migrasi belum di-apply live, branch belum di-merge.
-- Import/export JSON — Fase 4
+- ~~Import/export JSON — Fase 4~~ — **kode selesai** (branch `fase4-import-export`, belum merge/deploy). Fitur `src/features/import-export/`: Export dari header board (`useExportProject` + `buildExport` murni), Import dari daftar project (`ImportDialog` + `useImportProject`). Format `personal-kanban-export` v1 (nested lists→tasks, tanpa `id` apa pun). Validasi/normalisasi murni di `importValidation.ts` (+ `.selfcheck.ts`, 17 PASS). Import = project baru selalu; `owner_id`/`created_by` = user yang meng-import; `position` dihitung ulang dari urutan array (`POSITION_STEP`). Atomicity via rollback-by-delete (hapus project → cascade), **tanpa migrasi / RPC**. Batas: file ≤ 2 MB, ≤ 100 list, ≤ 2.000 task, deskripsi task ≤ 20.000 char, deskripsi project ≤ 2.000 char. Markdown import lewat `renderMarkdown` (DOMPurify) yang sama; nama dirender sebagai teks JSX.
 - Due date reminders, labels, dark mode, attachments, activity log — Fase 5
 
 ## Conventions
-- Feature-based folders: `src/features/{auth,projects,board,members}/` (`members/` sejak Fase 3)
+- Feature-based folders: `src/features/{auth,projects,board,members,import-export}/` (`members/` sejak Fase 3, `import-export/` sejak Fase 4)
 - One hook per Supabase table operation (query/create/update/delete/reorder), all via TanStack Query
+- Pure logic yang non-trivial punya self-check assert-based (jalankan via `pnpm dlx tsx`): `src/features/board/reorderUtils.selfcheck.ts` (13 PASS) + `src/features/import-export/importValidation.selfcheck.ts` (17 PASS)
+- Discriminated-union narrowing via `!x.ok` **tidak** menyempit di tsconfig ini (`strict` tidak aktif) — pakai `"errors" in res` untuk membedakan hasil `validateImport`
 - shadcn/ui components live untouched in `src/components/ui/`; compose them in feature files
 - Package manager: pnpm only (do not use npm/yarn lockfiles)
 
@@ -51,3 +53,5 @@
 - Fase 2 plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase2-dnd-markdown.md
 - Fase 3 spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase3-design.md
 - Fase 3 plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase3-invite-member.md
+- Fase 4 spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase4-design.md
+- Fase 4 plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase4-import-export.md

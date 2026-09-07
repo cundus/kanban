@@ -1,5 +1,20 @@
 # Changelog
 
+## [Fase 4] - 2026-09-07
+### Added
+- Export project ke file JSON dari header board (owner & member) — project + list + task + metadata versi/timestamp, diunduh langsung di browser
+- Import file JSON hasil export → membuat project baru milik user yang meng-import, dengan validasi berbahasa Indonesia dan pesan error yang jelas
+
+### Notes
+- 100% di client — tidak ada beban tambahan di VPS/Supabase, tidak ada migrasi DB, tidak ada dependency baru
+- Import selalu membuat project baru (tidak menimpa / merge). ID lama tidak dipertahankan; owner/created_by = user yang meng-import
+- Deskripsi markdown hasil import tetap disanitasi DOMPurify pada render (jalur `renderMarkdown` yang sama); nama project/list/task dirender sebagai teks
+- Kegagalan di tengah import melakukan rollback (project yang terlanjur dibuat dihapus, cascade membersihkan list/task)
+
+### Status deploy
+- **Belum di-deploy.** Kode selesai di branch `fase4-import-export` (`tsc -b` / `pnpm build` / self-check 13+17 PASS / lint hijau). Belum di-merge ke `main`
+- Pending maintainer: E2E manual (export owner/member, round-trip import, XSS nama/markdown, 5 kasus validasi, rollback, regresi RLS akun ketiga), lalu merge + deploy. Tidak ada migrasi untuk di-apply
+
 ## [Fase 3] - 2026-09-06 / 2026-09-07
 ### Added
 - Invite member ke project lewat email (owner). Tanpa server email — owner membagikan link undangan manual

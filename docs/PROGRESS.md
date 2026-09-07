@@ -75,6 +75,26 @@ Status: **deployed to production pada 2026-09-07** — migrasi `20260906020000_p
 - [x] Apply migrasi `20260906020000_project_members_rls.sql` ke Supabase live — **selesai 2026-09-07** via `pnpm migrate:up` (session pooler aws-0-ap-southeast-1); terverifikasi tabel `project_members`, fungsi `is_project_member`/`is_project_owner`/`claim_pending_invites`, dan backfill owner project lama (`pcinta0@gmail.com` → owner/accepted)
 - [x] Merge `fase3-invite-member` → `main` + deploy — **selesai 2026-09-07** (`59b767a..41b196e` fast-forward, push `main` → auto-deploy webhook, HTTP 200, bundle `index-DVijB2h6.js`)
 
+## Fase 4 — Import & Export JSON
+Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase4-import-export.md
+Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase4-design.md
+Status: **kode selesai di branch `fase4-import-export` — belum di-merge, belum di-deploy.** `pnpm exec tsc -b` exit 0; `pnpm build` sukses (bundle `index-C7StfUVw.js` 252.60 kB / gzip 82.21 kB — tidak naik, tanpa library baru); `reorderUtils.selfcheck.ts` 13/13 PASS; `importValidation.selfcheck.ts` 17/17 PASS; `pnpm lint` bersih. **Tanpa migrasi DB, tanpa perubahan RLS/`database.types.ts`, tanpa dependency baru.**
+
+- [x] Task 0: Prasyarat (baca spec/PRD/MEMORY, baseline hijau, branch `fase4-import-export`) — asumsi kerja A1–A8 dipakai (Spec §11 belum dijawab maintainer)
+- [x] Task 1: Format export + `buildExport()` murni + `exportFileName()` (`src/features/import-export/exportFormat.ts`, commit `befdc01`)
+- [x] Task 2: `validateImport`/`normalizeImport` murni + self-check 17 PASS (`importValidation.ts` + `importValidation.selfcheck.ts`, commit `5f3d75a`)
+- [x] Task 3: `useExportProject` + tombol "Export JSON" di header board, owner & member (tanpa role-gating) (`useExportProject.ts`, `BoardPage.tsx`, commit `ff49840`)
+- [x] Task 4: `useImportProject` — insert project baru + loop list + batch task, rollback-by-delete saat gagal di tengah (`useImportProject.ts`, commit `4f244d1`)
+- [x] Task 5: `ImportDialog` (file picker + batas 2 MB + error Bahasa Indonesia + ringkasan) + tombol "Import" di daftar project (`ImportDialog.tsx`, `ProjectListPage.tsx`, commit `f3ddae8`)
+- [x] Task 6: QA akhir + verifikasi + dokumentasi
+  - [x] Step 1: Typecheck `pnpm exec tsc -b` — exit 0
+  - [x] Step 2: Production build `pnpm build` — exit 0, `dist/` hanya `index.html` + `assets/`, bundle tidak bertambah (tanpa library baru)
+  - [x] Step 3: Self-check — `reorderUtils.selfcheck.ts` 13/13 PASS (regression guard), `importValidation.selfcheck.ts` 17/17 PASS
+  - [x] Step 4: Lint `pnpm lint` (oxlint) — tidak ada error baru
+  - [ ] Step 5: E2E manual (export owner/member, round-trip import, nama sebagai teks, validasi 5 kasus, rollback, regresi RLS akun ketiga) — **pending maintainer**: butuh browser + sesi login + ≥ 2 akun Google + akses Supabase dashboard
+  - [x] Step 6-9: PROGRESS/CHANGELOG/MEMORY diperbarui, commit dokumentasi dibuat
+- [ ] Merge `fase4-import-export` → `main` + deploy — **pending maintainer** (tidak ada migrasi untuk di-apply)
+
 ## Deployment
 
 | | |
