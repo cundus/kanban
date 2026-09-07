@@ -27,6 +27,7 @@ import { useCreateList, useLists, useReorderList } from "./useLists"
 import { useMoveTask, useTasks } from "./useTasks"
 import { useProject } from "@/features/projects/useProjects"
 import { MembersDialog } from "@/features/members/MembersDialog"
+import { useExportProject } from "@/features/import-export/useExportProject"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 type List = Database["public"]["Tables"]["lists"]["Row"]
@@ -46,6 +47,7 @@ export function BoardPage() {
   const createList = useCreateList(projectId)
   const moveTask = useMoveTask(projectId)
   const reorderList = useReorderList(projectId)
+  const { exportNow } = useExportProject(projectId)
 
   const [newListName, setNewListName] = useState("")
   const [membersOpen, setMembersOpen] = useState(false)
@@ -226,6 +228,9 @@ export function BoardPage() {
           {project && <span className="font-medium">{project.name}</span>}
           <Button variant="outline" onClick={() => setMembersOpen(true)}>
             Members
+          </Button>
+          <Button variant="outline" onClick={() => void exportNow()}>
+            Export JSON
           </Button>
         </div>
         <div className="flex gap-2">
