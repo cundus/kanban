@@ -5,6 +5,7 @@ import type { Database } from "@/types/database.types"
 type Project = Database["public"]["Tables"]["projects"]["Row"]
 
 const PROJECTS_KEY = ["projects"] as const
+const PROJECT_STATS_KEY = ["project-stats"] as const
 
 export type ProjectWithRole = Project & { isOwner: boolean }
 
@@ -32,6 +33,32 @@ export function useProjects() {
         return b.created_at.localeCompare(a.created_at)
       })
       return rows
+    },
+  })
+}
+
+export type ProjectStats = { count: number; lastUpdated: string | null }
+
+// ponytail: fetches all visible task rows to aggregate client-side. Ceiling = row count.
+// Upgrade to a Postgres view or RPC returning per-project aggregates when tasks exceed a few thousand.
+export function useProjectStats() {
+  return useQuery({
+    queryKey: PROJECT_STATS_KEY,
+    queryFn: async (): Promise<Map<string, ProjectStats>> => {
+      // RLS already scopes rows to projects the user can see.
+      const { data, error } = await supabase.from("tasks").select("project_id, updated_at")
+      if (error) throw error
+
+      const stats = new Map<string, ProjectStats>()
+      for (const row of data as { project_id: string; updated_at: string | null }[]) {
+        const current = stats.get(row.project_id) ?? { count: 0, lastUpdated: null }
+        current.count += 1
+        if (row.updated_at && (!current.lastUpdated || row.updated_at > current.lastUpdated)) {
+          current.lastUpdated = row.updated_at
+        }
+        stats.set(row.project_id, current)
+      }
+      return stats
     },
   })
 }
