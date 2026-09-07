@@ -11,9 +11,9 @@
 - Deskripsi markdown hasil import tetap disanitasi DOMPurify pada render (jalur `renderMarkdown` yang sama); nama project/list/task dirender sebagai teks
 - Kegagalan di tengah import melakukan rollback (project yang terlanjur dibuat dihapus, cascade membersihkan list/task)
 
-### Status deploy
-- **Belum di-deploy.** Kode selesai di branch `fase4-import-export` (`tsc -b` / `pnpm build` / self-check 13+17 PASS / lint hijau). Belum di-merge ke `main`
-- Pending maintainer: E2E manual (export owner/member, round-trip import, XSS nama/markdown, 5 kasus validasi, rollback, regresi RLS akun ketiga), lalu merge + deploy. Tidak ada migrasi untuk di-apply
+### Status deploy (update 2026-09-07)
+- Branch di-merge ke `main` (`77dfa71`) dan auto-deploy live via webhook — **https://kanban.cundus.my.id** HTTP 200, bundle `index-D5xNrsS_.js`
+- Tanpa migrasi DB, tanpa dependency baru. Sisa pending maintainer: E2E manual import/export (export owner/member, round-trip import, validasi, rollback)
 
 ## [Fase 3] - 2026-09-06 / 2026-09-07
 ### Added
