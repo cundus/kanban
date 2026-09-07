@@ -78,7 +78,7 @@ Status: **deployed to production pada 2026-09-07** — migrasi `20260906020000_p
 ## Fase 4 — Import & Export JSON
 Plan: docs/superpowers/plans/2026-09-06-personal-kanban-fase4-import-export.md
 Spec: docs/superpowers/specs/2026-09-06-personal-kanban-fase4-design.md
-Status: **kode selesai di branch `fase4-import-export` — belum di-merge, belum di-deploy.** `pnpm exec tsc -b` exit 0; `pnpm build` sukses (bundle `index-C7StfUVw.js` 252.60 kB / gzip 82.21 kB — tidak naik, tanpa library baru); `reorderUtils.selfcheck.ts` 13/13 PASS; `importValidation.selfcheck.ts` 17/17 PASS; `pnpm lint` bersih. **Tanpa migrasi DB, tanpa perubahan RLS/`database.types.ts`, tanpa dependency baru.**
+Status: **deployed to production pada 2026-09-07** — branch di-merge ke `main` (`77dfa71`) dan auto-deploy live via webhook (bundle `index-D5xNrsS_.js`, HTTP 200). **Tanpa migrasi DB, tanpa perubahan RLS/`database.types.ts`, tanpa dependency baru.** Sisa pending maintainer: E2E manual import/export (Task 6 Step 5).
 
 - [x] Task 0: Prasyarat (baca spec/PRD/MEMORY, baseline hijau, branch `fase4-import-export`) — asumsi kerja A1–A8 dipakai (Spec §11 belum dijawab maintainer)
 - [x] Task 1: Format export + `buildExport()` murni + `exportFileName()` (`src/features/import-export/exportFormat.ts`, commit `befdc01`)
@@ -93,7 +93,7 @@ Status: **kode selesai di branch `fase4-import-export` — belum di-merge, belum
   - [x] Step 4: Lint `pnpm lint` (oxlint) — tidak ada error baru
   - [ ] Step 5: E2E manual (export owner/member, round-trip import, nama sebagai teks, validasi 5 kasus, rollback, regresi RLS akun ketiga) — **pending maintainer**: butuh browser + sesi login + ≥ 2 akun Google + akses Supabase dashboard
   - [x] Step 6-9: PROGRESS/CHANGELOG/MEMORY diperbarui, commit dokumentasi dibuat
-- [ ] Merge `fase4-import-export` → `main` + deploy — **pending maintainer** (tidak ada migrasi untuk di-apply)
+- [x] Merge `fase4-import-export` → `main` + deploy — **selesai 2026-09-07** (`65dfb05..77dfa71` fast-forward, push `main` → auto-deploy webhook, HTTP 200, bundle `index-D5xNrsS_.js`; tanpa migrasi DB)
 
 ## Deployment
 
@@ -107,6 +107,7 @@ Status: **kode selesai di branch `fase4-import-export` — belum di-merge, belum
 | GitHub Actions | `.github/workflows/deploy.yml` — non-functional, see below |
 | Fase 2 deploy | `main` `98121b0` (lalu `59b767a` fix mobile DnD) auto-deployed live via webhook pada 2026-09-06 (bundle `index-C9SpamEW.js`). DB migration `20260906010000_fractional_positions.sql` **sudah di-apply** live pada 2026-09-06 — kolom `lists.position` & `tasks.position` terverifikasi `double precision`. |
 | Fase 3 deploy | `main` `41b196e` auto-deployed live via webhook pada 2026-09-07 (bundle `index-DVijB2h6.js`, HTTP 200). DB migration `20260906020000_project_members_rls.sql` **sudah di-apply** live pada 2026-09-07 — tabel `project_members` + 3 fungsi + backfill owner OK. |
+| Fase 4 deploy | `main` `77dfa71` auto-deployed live via webhook pada 2026-09-07 (bundle `index-D5xNrsS_.js`, HTTP 200). Tanpa migrasi DB / dep baru. |
 
 Hosting stays on the VPS. Cloudflare Pages and other external build hosts were considered and declined.
 
