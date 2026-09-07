@@ -1,10 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>temp-scaffold</title>
+    <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="A small, fast kanban board for personal and shared projects." />
+    <title>Kanban</title>
+    <script>
+      // Applied before first paint. A theme flash is a bug, not a tradeoff. See DESIGN.md 5.8.
+      try {
+        var stored = localStorage.getItem("pk-theme");
+        var dark = stored ? stored === "dark" : true;
+        document.documentElement.classList.toggle("dark", dark);
+      } catch (_) {
+        /* private mode: keep the dark default already on <html> */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

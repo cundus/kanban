@@ -41,8 +41,12 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.1.0",
+    "grab": "^0.2.0",
     "oxlint": "^1.79.0",
     "pg": "^8.23.0",
+    "playwright": "^1.63.0",
+    "react-doctor": "^0.9.13",
+    "react-scan": "^0.5.7",
     "typescript": "~5.9.3",
     "vite": "^8.2.2"
   }

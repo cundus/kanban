@@ -5,126 +5,420 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---------------------------------------------------------------------------
+   Token contract: DESIGN.md
+   Semantic ramps live in :root / .dark. The @theme inline block below bridges
+   them onto shadcn's variable names so the primitives keep working unchanged.
+   No orphan hex. No magic px. Every value here is named in DESIGN.md.
+--------------------------------------------------------------------------- */
+
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+  /* shadcn bridge — DESIGN.md 1.6 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Direct semantic access — DESIGN.md 1.1-1.5 */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-4: var(--text-4);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-line-subtle: var(--line-subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-scrim: var(--scrim);
+
+  /* Type — DESIGN.md 2 */
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Geist Mono", Menlo, monospace;
+
+  --text-display: 2rem;
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.022em;
+  --text-display--font-weight: 590;
+
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.012em;
+  --text-title--font-weight: 590;
+
+  --text-heading: 1.125rem;
+  --text-heading--line-height: 1.3;
+  --text-heading--letter-spacing: -0.009em;
+  --text-heading--font-weight: 510;
+
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5;
+  --text-body--letter-spacing: -0.011em;
+
+  --text-ui: 0.875rem;
+  --text-ui--line-height: 1.4;
+  --text-ui--letter-spacing: -0.013em;
+  --text-ui--font-weight: 510;
+
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: -0.01em;
+  --text-label--font-weight: 510;
+
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1.35;
+  --text-micro--letter-spacing: 0em;
+  --text-micro--font-weight: 510;
+
+  /* Radius — DESIGN.md 3.2 */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 22px;
+
+  /* Widths — DESIGN.md 3.3 */
+  --container-dialog: 24rem;
+
+  /* Motion — DESIGN.md 6 */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+  color-scheme: light;
+
+  /* Neutral ramp — DESIGN.md 1.1 (light) */
+  --surface-0: oklch(0.975 0.002 265);
+  --surface-1: oklch(0.995 0.001 265);
+  --surface-2: oklch(0.965 0.003 265);
+  --surface-3: oklch(0.935 0.004 265);
+  --surface-4: oklch(0.905 0.005 265);
+
+  /* Text ramp — DESIGN.md 1.2 (light) */
+  --text-1: oklch(0.2 0.008 265);
+  --text-2: oklch(0.36 0.01 265);
+  --text-3: oklch(0.52 0.01 265);
+  --text-4: oklch(0.65 0.008 265);
+
+  /* Accent — DESIGN.md 1.3 (light) */
+  --accent-solid: oklch(0.52 0.18 274);
+  --accent-hover: oklch(0.58 0.175 274);
+  --accent-fg: oklch(0.99 0.002 265);
+  --accent-soft: oklch(0.52 0.18 274 / 0.1);
+  --accent-line: oklch(0.52 0.18 274 / 0.4);
+
+  /* Status — DESIGN.md 1.4 (light) */
+  --success: oklch(0.56 0.145 152);
+  --danger: oklch(0.55 0.205 25);
+  --danger-soft: oklch(0.55 0.205 25 / 0.1);
+
+  /* Lines — DESIGN.md 1.5 (light) */
+  --line-subtle: oklch(0.2 0.008 265 / 0.07);
+  --line: oklch(0.2 0.008 265 / 0.11);
+  --line-strong: oklch(0.2 0.008 265 / 0.17);
+  /* Scrim stays dark in BOTH themes so overlays actually dim the page. */
+  --scrim: oklch(0.145 0.004 265 / 0.5);
+
+  /* Elevation — DESIGN.md 4. Shadows tinted to canvas hue, never neutral black. */
+  --elev-inset: inset 0 0 12px oklch(0.2 0.008 265 / 0.08);
+  --elev-ring: 0 0 0 1px oklch(0.2 0.008 265 / 0.08);
+  --elev-overlay:
+    0 8px 2px oklch(0.2 0.008 265 / 0), 0 5px 2px oklch(0.2 0.008 265 / 0.02),
+    0 3px 2px oklch(0.2 0.008 265 / 0.05), 0 1px 1px oklch(0.2 0.008 265 / 0.08),
+    0 0 1px oklch(0.2 0.008 265 / 0.1);
+  --elev-lifted:
+    0 1px 1px oklch(0.2 0.008 265 / 0.08), 0 12px 32px oklch(0.2 0.008 265 / 0.18);
+
+  /* Motion durations — DESIGN.md 6 */
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 320ms;
+
+  /* Grain — DESIGN.md 4 */
+  --grain-opacity: 0.025;
+
+  /* shadcn bridge values */
+  --radius: 0.5rem;
+  --background: var(--surface-0);
+  --foreground: var(--text-1);
+  --card: var(--surface-1);
+  --card-foreground: var(--text-1);
+  --popover: var(--surface-1);
+  --popover-foreground: var(--text-1);
+  --primary: var(--accent-solid);
+  --primary-foreground: var(--accent-fg);
+  --secondary: var(--surface-3);
+  --secondary-foreground: var(--text-1);
+  --muted: var(--surface-3);
+  --muted-foreground: var(--text-3);
+  --accent: var(--surface-3);
+  --accent-foreground: var(--text-1);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--accent-fg);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent-line);
+  --chart-1: var(--accent-solid);
+  --chart-2: oklch(0.6 0.13 220);
+  --chart-3: var(--success);
+  --chart-4: oklch(0.68 0.14 75);
+  --chart-5: var(--danger);
+  --sidebar: var(--surface-1);
+  --sidebar-foreground: var(--text-1);
+  --sidebar-primary: var(--accent-solid);
+  --sidebar-primary-foreground: var(--accent-fg);
+  --sidebar-accent: var(--surface-3);
+  --sidebar-accent-foreground: var(--text-1);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--accent-line);
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+  color-scheme: dark;
+
+  /* Neutral ramp — DESIGN.md 1.1 (dark). Elevation = stepping UP this ramp. */
+  --surface-0: oklch(0.145 0.004 265);
+  --surface-1: oklch(0.185 0.005 265);
+  --surface-2: oklch(0.225 0.006 265);
+  --surface-3: oklch(0.275 0.007 270);
+  --surface-4: oklch(0.325 0.008 270);
+
+  /* Text ramp — DESIGN.md 1.2 (dark). Never pure white. */
+  --text-1: oklch(0.97 0.002 265);
+  --text-2: oklch(0.87 0.012 265);
+  --text-3: oklch(0.65 0.012 265);
+  --text-4: oklch(0.51 0.01 265);
+
+  /* Accent — DESIGN.md 1.3 (dark) */
+  --accent-solid: oklch(0.55 0.175 274);
+  --accent-hover: oklch(0.64 0.165 276);
+  --accent-fg: oklch(0.99 0.002 265);
+  --accent-soft: oklch(0.55 0.175 274 / 0.14);
+  --accent-line: oklch(0.55 0.175 274 / 0.45);
+
+  /* Status — DESIGN.md 1.4 (dark) */
+  --success: oklch(0.68 0.15 152);
+  --danger: oklch(0.62 0.195 22);
+  --danger-soft: oklch(0.62 0.195 22 / 0.14);
+
+  /* Lines — DESIGN.md 1.5 (dark). Translucent white, never opaque gray. */
+  --line-subtle: oklch(1 0 0 / 0.06);
+  --line: oklch(1 0 0 / 0.1);
+  --line-strong: oklch(1 0 0 / 0.16);
+  --scrim: oklch(0.145 0.004 265 / 0.7);
+
+  /* Elevation — DESIGN.md 4 */
+  --elev-inset: inset 0 0 12px oklch(0 0 0 / 0.2);
+  --elev-ring: 0 0 0 1px oklch(0 0 0 / 0.2);
+  --elev-overlay:
+    0 8px 2px oklch(0 0 0 / 0), 0 5px 2px oklch(0 0 0 / 0.02), 0 3px 2px oklch(0 0 0 / 0.06),
+    0 1px 1px oklch(0 0 0 / 0.1), 0 0 1px oklch(0 0 0 / 0.12);
+  --elev-lifted:
+    0 1px 1px oklch(0 0 0 / 0.1), 0 12px 32px oklch(0.145 0.004 265 / 0.55);
+
+  --grain-opacity: 0.035;
+
+  /* shadcn bridge — dark values inherit the ramps above */
+  --background: var(--surface-0);
+  --foreground: var(--text-1);
+  --card: var(--surface-2);
+  --card-foreground: var(--text-1);
+  --popover: var(--surface-2);
+  --popover-foreground: var(--text-1);
+  --primary: var(--accent-solid);
+  --primary-foreground: var(--accent-fg);
+  --secondary: var(--surface-3);
+  --secondary-foreground: var(--text-1);
+  --muted: var(--surface-3);
+  --muted-foreground: var(--text-3);
+  --accent: var(--surface-3);
+  --accent-foreground: var(--text-1);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--accent-fg);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent-line);
+  --chart-2: oklch(0.68 0.13 220);
+  --chart-4: oklch(0.75 0.14 75);
+  --sidebar: var(--surface-1);
+  --sidebar-foreground: var(--text-1);
+  --sidebar-primary: var(--accent-solid);
+  --sidebar-primary-foreground: var(--accent-fg);
+  --sidebar-accent: var(--surface-3);
+  --sidebar-accent-foreground: var(--text-1);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--accent-line);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
+  }
+
   html {
     @apply font-sans;
-    }
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    letter-spacing: var(--text-body--letter-spacing);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grain — DESIGN.md 4. Stops large dark fields from banding. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Headings — sentence case, balanced, weight ladder 400/510/590. Never 700. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Numbers never jitter on update — DESIGN.md 2.2 */
+  [data-numeric],
+  time,
+  output {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--text-1);
+  }
+}
+
+@layer utilities {
+  /* Elevation ladder — DESIGN.md 4 */
+  .elev-inset {
+    box-shadow: var(--elev-inset);
+  }
+  .elev-ring {
+    box-shadow: var(--elev-ring);
+  }
+  .elev-overlay {
+    box-shadow: var(--elev-overlay);
+  }
+  .elev-lifted {
+    box-shadow: var(--elev-lifted);
+  }
+
+  /* Staggered entry — DESIGN.md 6. Capped at 8 items by the caller. */
+  .animate-enter {
+    animation: enter var(--dur-base) var(--ease-out) both;
+  }
+
+  .skip-link {
+    @apply absolute left-4 z-50 rounded-md px-3 py-2;
+    top: -100%;
+    background: var(--surface-2);
+    box-shadow: var(--elev-overlay);
+    font-size: var(--text-ui);
+    font-weight: var(--text-ui--font-weight);
+  }
+  .skip-link:focus-visible {
+    top: 1rem;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* DESIGN.md 6 + 7: reduced motion collapses durations; opacity survives. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body::before {
+    display: none;
+  }
 }

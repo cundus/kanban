@@ -8,6 +8,9 @@ import { BoardPage } from "@/features/board/BoardPage"
 export function App() {
   return (
     <BrowserRouter>
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
