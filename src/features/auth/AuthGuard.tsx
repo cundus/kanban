@@ -7,7 +7,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-svh items-center justify-center text-muted-foreground">
+      <div className="flex min-h-[100dvh] items-center justify-center text-text-3">
         Loading...
       </div>
     )
