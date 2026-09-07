@@ -17,6 +17,7 @@ import {
   useDeleteProject,
 } from "./useProjects"
 import { useAuth } from "@/features/auth/useAuth"
+import { ImportDialog } from "@/features/import-export/ImportDialog"
 import type { Database } from "@/types/database.types"
 
 type Project = Database["public"]["Tables"]["projects"]["Row"]
@@ -29,6 +30,7 @@ export function ProjectListPage() {
   const { signOut } = useAuth()
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [editing, setEditing] = useState<Project | null>(null)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -66,6 +68,9 @@ export function ProjectListPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">My Projects</h1>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            Import
+          </Button>
           <Button onClick={openCreateDialog}>New Project</Button>
           <Button variant="outline" onClick={() => signOut()}>
             Sign out
@@ -111,6 +116,10 @@ export function ProjectListPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {importOpen && (
+        <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      )}
     </div>
   )
 }
