@@ -2,7 +2,9 @@ import { useState } from "react"
 import { PencilIcon, TagIcon, TrashIcon } from "lucide-react"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -63,12 +65,13 @@ function LabelsDialog({ projectId, open, onOpenChange }: LabelsDialogProps) {
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>Labels</DialogTitle>
         </DialogHeader>
-        <div className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
+        <DialogBody className="gap-2">
           {isLoading ? (
             <>
               <Skeleton className="h-10 w-full" />
@@ -128,13 +131,13 @@ function LabelsDialog({ projectId, open, onOpenChange }: LabelsDialogProps) {
               </div>
             ))
           )}
-        </div>
-        <div className="flex items-center gap-2 border-t border-line-subtle pt-3">
+        </DialogBody>
+        <DialogFooter className="flex-row items-center sm:justify-start">
           <Input
             placeholder="New label name"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            className="flex-1"
+            className="min-w-0 flex-1"
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
           <input
@@ -147,8 +150,9 @@ function LabelsDialog({ projectId, open, onOpenChange }: LabelsDialogProps) {
           <Button onClick={handleCreate} disabled={!newName.trim()}>
             Add
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
+    </Dialog>
       <ConfirmDialog
         open={!!pendingDelete}
         onOpenChange={(v) => {
@@ -162,7 +166,7 @@ function LabelsDialog({ projectId, open, onOpenChange }: LabelsDialogProps) {
           setPendingDelete(null)
         }}
       />
-    </Dialog>
+    </>
   )
 }
 

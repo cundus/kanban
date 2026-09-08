@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogHeader,
 } from "@/components/ui/dialog"
@@ -140,14 +141,14 @@ export function TaskDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent size="lg">
-          <DialogHeader className="flex flex-row items-center justify-between gap-2">
+        <DialogContent size="lg" className="sm:max-w-3xl">
+          <DialogHeader className="flex flex-row items-center gap-2">
             <Input
               id={TITLE_INPUT_ID}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleTitleBlur}
-              className="text-heading border-none px-0 shadow-none focus-visible:ring-0"
+              className="text-heading min-w-0 flex-1 border-none px-0 shadow-none focus-visible:ring-0"
             />
             <TaskActionsMenu
               task={currentTask}
@@ -158,7 +159,7 @@ export function TaskDialog({
             />
           </DialogHeader>
 
-          <div className="grid gap-5 md:grid-cols-[1fr_16rem]">
+          <DialogBody className="grid gap-5 md:grid-cols-[1fr_16rem]">
             <div className="flex flex-col gap-2 md:order-1">
               <Label>Description</Label>
               <MarkdownEditor
@@ -244,7 +245,7 @@ export function TaskDialog({
                 <span>Terakhir diubah {updatedRelative}</span>
               </div>
             </div>
-          </div>
+          </DialogBody>
         </DialogContent>
       </Dialog>
       <LabelsDialog projectId={projectId} open={labelsDialogOpen} onOpenChange={setLabelsDialogOpen} />

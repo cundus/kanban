@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -112,12 +113,12 @@ export function ImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Import a project from JSON</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3">
+        <DialogBody className="gap-3">
           <input
             ref={inputRef}
             type="file"
@@ -155,7 +156,7 @@ export function ImportDialog({
               <span data-numeric>{summary.tasks}</span> tasks.
             </p>
           )}
-        </div>
+        </DialogBody>
 
         <DialogFooter>
           <Button
