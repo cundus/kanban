@@ -126,6 +126,7 @@ export function ListColumn({
               key={task.id}
               task={task}
               listId={list.id}
+              projectId={projectId}
               onOpen={() => onOpenTask(task.id)}
             />
           ))}

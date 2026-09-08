@@ -2,17 +2,20 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { cn } from "cn"
 import type { Database } from "@/types/database.types"
+import { TaskActionsMenu } from "./TaskActionsMenu"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
 export function TaskCard({
   task,
   listId,
+  projectId,
   onOpen,
   overlay = false,
 }: {
   task: Task
   listId: string
+  projectId: string
   onOpen: () => void
   overlay?: boolean
 }) {
@@ -28,22 +31,38 @@ export function TaskCard({
     opacity: isDragging ? 0 : 1,
   }
 
+  if (overlay) {
+    return (
+      <article
+        // Signature drag lift: DESIGN.md 6
+        className="elev-lifted rounded-lg border border-accent-line bg-surface-2 px-3 py-2.5 text-ui text-text-1 rotate-2 scale-[1.03] cursor-grabbing"
+      >
+        {task.title}
+      </article>
+    )
+  }
+
   return (
-    <article
-      ref={overlay ? undefined : setNodeRef}
-      style={overlay ? undefined : style}
-      {...(overlay ? {} : attributes)}
-      {...(overlay ? {} : listeners)}
-      onClick={onOpen}
-      className={cn(
-        "rounded-lg border bg-surface-2 px-3 py-2.5 text-ui text-text-1",
-        overlay
-          // Signature drag lift: DESIGN.md 6
-          ? "elev-lifted rotate-2 scale-[1.03] cursor-grabbing border-accent-line"
-          : "cursor-pointer border-line transition-[background-color,border-color,transform] [transition-duration:var(--dur-fast)] [transition-timing-function:var(--ease-out)] hover:border-line-strong hover:bg-surface-3 active:translate-y-px",
-      )}
-    >
-      {task.title}
-    </article>
+    <TaskActionsMenu task={task} projectId={projectId} variant="context" onRename={onOpen}>
+      <article
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        onClick={onOpen}
+        className={cn(
+          "group/card relative rounded-lg border bg-surface-2 px-3 py-2.5 text-ui text-text-1",
+          "cursor-pointer border-line transition-[background-color,border-color,transform] [transition-duration:var(--dur-fast)] [transition-timing-function:var(--ease-out)] hover:border-line-strong hover:bg-surface-3 active:translate-y-px",
+        )}
+      >
+        {task.title}
+        <div
+          className="absolute right-1 top-1 opacity-0 transition-opacity group-hover/card:opacity-100 sm:opacity-0 max-sm:opacity-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <TaskActionsMenu task={task} projectId={projectId} variant="dropdown" onRename={onOpen} />
+        </div>
+      </article>
+    </TaskActionsMenu>
   )
 }

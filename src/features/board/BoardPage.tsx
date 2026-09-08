@@ -351,6 +351,7 @@ export function BoardPage() {
             <TaskCard
               task={activeTask}
               listId={activeTask.list_id}
+              projectId={projectId}
               onOpen={() => {}}
               overlay
             />
