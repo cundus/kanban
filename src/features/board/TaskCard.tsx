@@ -2,7 +2,10 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { cn } from "cn"
 import type { Database } from "@/types/database.types"
+import { Avatar } from "@/components/ui/avatar"
 import { TaskActionsMenu } from "./TaskActionsMenu"
+import { useTaskAssignees } from "./useTaskAssignees"
+import type { AssigneeProfile } from "./useTaskAssignees"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -24,6 +27,9 @@ export function TaskCard({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id, data: { type: "task", listId } })
 
+  const { data: assigneesByTask } = useTaskAssignees(projectId)
+  const assignees = assigneesByTask?.[task.id] ?? []
+
   // Transform (not Translate) so neighbours animate fully when a gap opens.
   // opacity 0 hides the source while DragOverlay follows the cursor; dnd-kit
   // keeps this node mounted so the slot stays reserved.
@@ -40,6 +46,7 @@ export function TaskCard({
         className="elev-lifted rounded-lg border border-accent-line bg-surface-2 px-3 py-2.5 text-ui text-text-1 rotate-2 scale-[1.03] cursor-grabbing"
       >
         {task.title}
+        {assignees.length > 0 && <AvatarStack assignees={assignees} />}
       </article>
     )
   }
@@ -58,6 +65,7 @@ export function TaskCard({
         )}
       >
         {task.title}
+        {assignees.length > 0 && <AvatarStack assignees={assignees} />}
         <div
           className="absolute right-1 top-1 opacity-0 transition-opacity group-hover/card:opacity-100 sm:opacity-0 max-sm:opacity-100"
           onClick={(e) => e.stopPropagation()}
@@ -66,5 +74,28 @@ export function TaskCard({
         </div>
       </article>
     </TaskActionsMenu>
+  )
+}
+
+function AvatarStack({ assignees }: { assignees: AssigneeProfile[] }) {
+  const shown = assignees.slice(0, 3)
+  const extra = assignees.length - shown.length
+  return (
+    <div className="mt-1.5 flex -space-x-2">
+      {shown.map((a) => (
+        <Avatar
+          key={a.user_id}
+          name={a.full_name ?? a.email}
+          src={a.avatar_url}
+          size="sm"
+          className="ring-2 ring-surface-2"
+        />
+      ))}
+      {extra > 0 && (
+        <span className="flex size-6 items-center justify-center rounded-full bg-surface-3 text-[10px] text-text-3 ring-2 ring-surface-2">
+          +{extra}
+        </span>
+      )}
+    </div>
   )
 }
