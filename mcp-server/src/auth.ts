@@ -13,8 +13,15 @@ const RATE_LIMIT_WINDOW_MS = 60_000
 
 const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>()
 
+function sweepExpired(now: number): void {
+  for (const [key, bucket] of rateLimitBuckets) {
+    if (now >= bucket.resetAt) rateLimitBuckets.delete(key)
+  }
+}
+
 function isRateLimited(key: string): boolean {
   const now = Date.now()
+  sweepExpired(now)
   const bucket = rateLimitBuckets.get(key)
 
   if (!bucket || now >= bucket.resetAt) {
@@ -47,6 +54,7 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     .maybeSingle()
 
   if (error) {
+    console.error("mcp_tokens lookup failed:", error.message)
     return c.json({ error: "Internal server error" }, 500)
   }
 
@@ -56,14 +64,16 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 
   c.set("userId", data.user_id)
 
-  void supabase
-    .from("mcp_tokens")
-    .update({ last_used_at: new Date().toISOString() })
-    .eq("id", data.id)
+  void Promise.resolve(
+    supabase.from("mcp_tokens").update({ last_used_at: new Date().toISOString() }).eq("id", data.id)
+  )
     .then(({ error: updateError }) => {
       if (updateError) {
         console.error("Failed to update mcp_tokens.last_used_at:", updateError.message)
       }
+    })
+    .catch((err: unknown) => {
+      console.error("Failed to update mcp_tokens.last_used_at:", err)
     })
 
   await next()
