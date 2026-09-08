@@ -2,12 +2,12 @@ import { useMemo, useState } from "react"
 import { useDroppable } from "@dnd-kit/core"
 import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Trash2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Tooltip } from "@/components/ui/tooltip"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import type { Database } from "@/types/database.types"
+import { ListActionsMenu } from "./ListActionsMenu"
+import { positionBetween } from "./reorderUtils"
 import { TaskCard } from "./TaskCard"
 import { useDeleteList, useRenameList } from "./useLists"
 import { useCreateTask } from "./useTasks"
@@ -53,9 +53,10 @@ export function ListColumn({
 
   function handleAddTask() {
     if (!newTaskTitle.trim()) return
-    createTask.mutate(newTaskTitle, {
-      onSuccess: () => setNewTaskTitle(""),
-    })
+    createTask.mutate(
+      { title: newTaskTitle },
+      { onSuccess: () => setNewTaskTitle("") }
+    )
   }
 
   const style = overlay
@@ -104,17 +105,17 @@ export function ListColumn({
           <span data-numeric className="text-micro text-text-4">
             {tasks.length}
           </span>
-          <Tooltip label="Delete list">
-            <Button
-              size="icon"
-              variant="ghost"
-              aria-label={`Delete ${list.name}`}
-              className="rounded-full text-text-3 opacity-0 hover:text-danger group-hover/list:opacity-100 focus-visible:opacity-100"
-              onClick={() => setConfirmOpen(true)}
-            >
-              <Trash2Icon size={14} strokeWidth={1.5} aria-hidden />
-            </Button>
-          </Tooltip>
+          <ListActionsMenu
+            onRename={() => setIsEditingName(true)}
+            onAddToTop={() => {
+              const topPosition = positionBetween(null, tasks[0]?.position ?? null)
+              createTask.mutate({ title: "Untitled", position: topPosition })
+              // ponytail: "Untitled" placeholder title — no separate add-to-top input dialog;
+              // task created immediately, user renames via TaskDialog. Upgrade path: auto-open
+              // TaskDialog with title field focused if this UX feels abrupt.
+            }}
+            onDeleteRequest={() => setConfirmOpen(true)}
+          />
         </div>
       </div>
 

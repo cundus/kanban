@@ -30,20 +30,23 @@ export function useTasks(projectId: string) {
 export function useCreateTask(listId: string, projectId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (title: string) => {
+    mutationFn: async (input: { title: string; position?: number }) => {
       const { data: userData, error: userError } = await supabase.auth.getUser()
       if (userError || !userData.user) throw userError ?? new Error("Not authenticated")
 
-      const all = queryClient.getQueryData<Task[]>(tasksKey(projectId)) ?? []
-      const inList = all.filter((t) => t.list_id === listId)
-      const nextPosition = positionAtEnd(inList)
+      let nextPosition = input.position
+      if (nextPosition === undefined) {
+        const all = queryClient.getQueryData<Task[]>(tasksKey(projectId)) ?? []
+        const inList = all.filter((t) => t.list_id === listId)
+        nextPosition = positionAtEnd(inList)
+      }
 
       const { data, error } = await supabase
         .from("tasks")
         .insert({
           list_id: listId,
           project_id: projectId,
-          title,
+          title: input.title,
           position: nextPosition,
           created_by: userData.user.id,
         })
