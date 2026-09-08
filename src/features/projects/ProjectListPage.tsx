@@ -2,6 +2,7 @@ import { useState } from "react"
 import {
   ChevronDownIcon,
   FolderPlusIcon,
+  KeyIcon,
   LogOutIcon,
   MoonIcon,
   PlusIcon,
@@ -42,6 +43,7 @@ import {
 } from "./useProjects"
 import { useAuth } from "@/features/auth/useAuth"
 import { ImportDialog } from "@/features/import-export/ImportDialog"
+import { ApiTokensDialog } from "./ApiTokensDialog"
 import type { Database } from "@/types/database.types"
 
 type Project = Database["public"]["Tables"]["projects"]["Row"]
@@ -137,6 +139,7 @@ export function ProjectListPage() {
           <ProfileMenu
             email={session?.user.email ?? null}
             avatarUrl={session?.user.user_metadata.avatar_url ?? null}
+            userId={session?.user.id ?? null}
             onSignOut={() => signOut()}
           />
         </div>
@@ -249,53 +252,69 @@ function CreateProjectButton({
 function ProfileMenu({
   email,
   avatarUrl,
+  userId,
   onSignOut,
 }: {
   email: string | null
   avatarUrl: string | null
+  userId: string | null
   onSignOut: () => void
 }) {
   const { theme, toggleTheme } = useTheme()
   const nextTheme = theme === "dark" ? "light" : "dark"
   const initial = email?.[0]?.toUpperCase() ?? "?"
+  const [apiTokensOpen, setApiTokensOpen] = useState(false)
 
   return (
-    <Menu>
-      <Tooltip label={email ?? "Account menu"}>
-        <MenuTrigger
-          render={
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Account menu"
-              className="overflow-hidden rounded-full p-0"
-            />
-          }
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="size-full object-cover" />
-          ) : (
-            <span className="text-label text-text-2">{initial}</span>
-          )}
-        </MenuTrigger>
-      </Tooltip>
-      <MenuContent>
-        {email && <MenuLabel>{email}</MenuLabel>}
-        <MenuItem onClick={toggleTheme}>
-          {theme === "dark" ? (
-            <SunIcon size={16} strokeWidth={1.5} aria-hidden />
-          ) : (
-            <MoonIcon size={16} strokeWidth={1.5} aria-hidden />
-          )}
-          Switch to {nextTheme} theme
-        </MenuItem>
-        <MenuSeparator />
-        <MenuItem onClick={onSignOut}>
-          <LogOutIcon size={16} strokeWidth={1.5} aria-hidden />
-          Sign out
-        </MenuItem>
-      </MenuContent>
-    </Menu>
+    <>
+      <Menu>
+        <Tooltip label={email ?? "Account menu"}>
+          <MenuTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Account menu"
+                className="overflow-hidden rounded-full p-0"
+              />
+            }
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="size-full object-cover" />
+            ) : (
+              <span className="text-label text-text-2">{initial}</span>
+            )}
+          </MenuTrigger>
+        </Tooltip>
+        <MenuContent>
+          {email && <MenuLabel>{email}</MenuLabel>}
+          <MenuItem onClick={toggleTheme}>
+            {theme === "dark" ? (
+              <SunIcon size={16} strokeWidth={1.5} aria-hidden />
+            ) : (
+              <MoonIcon size={16} strokeWidth={1.5} aria-hidden />
+            )}
+            Switch to {nextTheme} theme
+          </MenuItem>
+          <MenuItem onClick={() => setApiTokensOpen(true)}>
+            <KeyIcon size={16} strokeWidth={1.5} aria-hidden />
+            API Tokens
+          </MenuItem>
+          <MenuSeparator />
+          <MenuItem onClick={onSignOut}>
+            <LogOutIcon size={16} strokeWidth={1.5} aria-hidden />
+            Sign out
+          </MenuItem>
+        </MenuContent>
+      </Menu>
+      {userId && (
+        <ApiTokensDialog
+          userId={userId}
+          open={apiTokensOpen}
+          onOpenChange={setApiTokensOpen}
+        />
+      )}
+    </>
   )
 }
 
