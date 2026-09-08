@@ -14,6 +14,9 @@ import { formatRelativeTime } from "@/lib/formatRelativeTime"
 import type { Database } from "@/types/database.types"
 import { useMembers } from "@/features/members/useMembers"
 import { useUpdateTask } from "./useTasks"
+import { cn } from "cn"
+import { Avatar } from "@/components/ui/avatar"
+import { useTaskAssignees, useToggleAssignee } from "./useTaskAssignees"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -38,6 +41,8 @@ export function TaskDialog({
   const [dueDate, setDueDate] = useState("")
   const updateTask = useUpdateTask(projectId)
   const { data: members } = useMembers(projectId)
+  const { data: assigneesByTask } = useTaskAssignees(projectId)
+  const toggleAssignee = useToggleAssignee(task?.id ?? "", projectId)
 
   // Reset on task identity change only — not full object — so an in-flight
   // autosave that updates the cached task object doesn't reset these fields
@@ -107,6 +112,15 @@ export function TaskDialog({
   const creatorName = creator?.profile?.full_name ?? creator?.profile?.email ?? "—"
   const updatedRelative = formatRelativeTime(currentTask.updated_at)
 
+  const currentAssigneeIds = new Set(
+    (assigneesByTask?.[currentTask.id] ?? []).map((a) => a.user_id)
+  )
+
+  const handleToggleAssignee = (userId: string) => {
+    const isCurrentlyAssigned = currentAssigneeIds.has(userId)
+    toggleAssignee.mutate({ userId, isCurrentlyAssigned })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
@@ -153,6 +167,34 @@ export function TaskDialog({
                 onChange={(e) => setDueDate(e.target.value)}
                 onBlur={handleDueDateBlur}
               />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>Assignee</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {(members ?? [])
+                  .filter((m) => m.user_id)
+                  .map((m) => {
+                    const userId = m.user_id as string
+                    const isAssigned = currentAssigneeIds.has(userId)
+                    const name = m.profile?.full_name ?? m.profile?.email ?? m.invited_email
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleToggleAssignee(userId)}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-micro transition-colors [transition-duration:var(--dur-fast)]",
+                          isAssigned
+                            ? "border-accent-line bg-accent-soft text-accent-solid"
+                            : "border-line text-text-3 hover:border-line-strong hover:text-text-2"
+                        )}
+                      >
+                        <Avatar name={name} src={m.profile?.avatar_url} size="sm" />
+                        {name}
+                      </button>
+                    )
+                  })}
+              </div>
             </div>
             <div className="flex flex-col gap-1 text-micro text-text-4">
               <span>Dibuat oleh {creatorName}</span>
