@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.6"
+  },
   "scripts": {
     "build": "tsc -b",
     "start": "node dist/index.js",
