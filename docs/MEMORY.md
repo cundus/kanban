@@ -15,6 +15,9 @@
 - **Task dialog (`TaskDialog.tsx`) upgrade Fase 5**: autosave per-field saat blur (bukan tombol Save eksplisit), layout 2 kolom (`dialog.tsx` dapat CVA `size` prop `default`=`sm:max-w-dialog`/`lg`=`sm:max-w-2xl`), footer metadata "Dibuat oleh {nama, dari `useMembers` yang sudah ada — tidak bikin hook baru}" + "Terakhir diubah {relatif}". Deep-link `?task=<id>` di `BoardPage.tsx` via `useSearchParams` (bukan state lokal) — task-id basi menampilkan toast "Task tidak ditemukan" lalu bersihkan query param.
 - **Assignee (join table + RLS) sejak Fase 6.1**: `task_assignees(task_id, user_id, assigned_at)` composite PK, RLS pakai helper `is_project_member()` yang sama seperti `tasks`/`lists` (bukan raw join `project_members` — raw join lupa cek `status = 'accepted'`, celah keamanan yang ketemu di code review lalu diperbaiki migrasi terpisah `20260908011000_task_assignees_rls_fix.sql`, bukan edit migrasi yang sudah ter-apply).
 - **Shared-cache independent-hook-call pattern**: `useTaskAssignees(projectId)` dipanggil independen oleh `TaskCard` **dan** `TaskDialog` (bukan prop-drilled dari `BoardPage`/`ListColumn`) — queryKey sama (`["task-assignees", projectId]`) jadi TanStack Query men-dedupe network call otomatis. Pola yang sama seperti `useMembers` yang sudah dipakai independen oleh `MembersDialog` dan `TaskDialog`.
+- **Labels (join table + RLS) sejak Fase 6.2**: `labels(id, project_id, name, color)` + `task_labels(task_id, label_id)` composite PK, RLS pakai helper `is_project_member()` yang sama sejak awal (bukan raw join yang butuh perbaikan terpisah seperti Fase 6.1's assignee).
+- Labels pakai **free-color-picker** (native `<input type="color">`), bukan palet warna tetap, atas pilihan eksplisit user.
+- `useTaskLabels` meniru persis pola batch-fetch-then-merge `useTaskAssignees` — ditetapkan sebagai bentuk standar untuk fitur task-scoped many-to-many berikutnya.
 
 ## Deferred (deliberately, not forgotten)
 - ~~Sanitasi HTML markdown (DOMPurify)~~ — **selesai Fase 3**. `dompurify` (^3.4.15) membungkus output `marked` lewat helper `src/features/board/markdown.ts` (`renderMarkdown`), dipakai `TaskDialog` view + `MarkdownEditor` preview. Tak ada lagi `marked.parse` langsung ke `dangerouslySetInnerHTML`.
@@ -22,7 +25,8 @@
 - ~~Import/export JSON — Fase 4~~ — **selesai & deployed live 2026-09-07** (merge `77dfa71`, bundle `index-D5xNrsS_.js`). Fitur `src/features/import-export/`: Export dari header board (`useExportProject` + `buildExport` murni), Import dari daftar project (`ImportDialog` + `useImportProject`). Format `personal-kanban-export` v1 (nested lists→tasks, tanpa `id` apa pun). Validasi/normalisasi murni di `importValidation.ts` (+ `.selfcheck.ts`, 17 PASS). Import = project baru selalu; `owner_id`/`created_by` = user yang meng-import; `position` dihitung ulang dari urutan array (`POSITION_STEP`). Atomicity via rollback-by-delete (hapus project → cascade), **tanpa migrasi / RPC**. Batas: file ≤ 2 MB, ≤ 100 list, ≤ 2.000 task, deskripsi task ≤ 20.000 char, deskripsi project ≤ 2.000 char. Markdown import lewat `renderMarkdown` (DOMPurify) yang sama; nama dirender sebagai teks JSX.
 - ~~Task actions (Duplicate/Archive/Delete) + Task Dialog upgrade — Fase 5~~ — **kode selesai di branch `feat/fase5-task-actions`** (commit terakhir `7ee1900`), belum di-merge/deploy. Lihat Key Decisions di bawah.
 - ~~Assignee~~ — **selesai Fase 6.1** (kode di `main`, migrasi ter-apply live). Lihat Key Decisions di bawah.
-- Labels, checklist, task-card ornaments lain — masih digeser, belum ada fase yang menjadwalkan
+- ~~Labels~~ — **selesai Fase 6.2** (kode di `main`, migrasi ter-apply live). Lihat Key Decisions di bawah.
+- Checklist, task-card ornaments lain — masih digeser, belum ada fase yang menjadwalkan
 - Due date reminders, dark mode, attachments, activity log — masih deferred, belum ada fase yang menjadwalkan
 
 ## Conventions

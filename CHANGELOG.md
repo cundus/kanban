@@ -1,5 +1,23 @@
 # Changelog
 
+## [Fase 6.2] - 2026-09-08
+### Added
+- Label pada task — tabel baru `labels` (per-project) + `task_labels` (composite PK `task_id`+`label_id`, RLS via `is_project_member()`)
+- Baris pill label berwarna di task card, di atas avatar stack
+- Chip picker label di task dialog — klik chip untuk toggle instan, tanpa tombol Save
+- Dialog "Labels" — kelola label project (create/edit warna & nama/delete), dibuka dari menu `...` header board
+- Komponen `LabelBadge` baru (`src/components/ui/label-badge.tsx`) — pill dengan warna bebas (native `<input type="color">`) dan kontras teks otomatis berbasis luminance
+
+### Notes
+- Tidak ada dependency baru
+- RLS pakai helper `is_project_member()` yang sama sejak awal (bukan raw join `project_members`) — belajar dari celah keamanan Fase 6.1
+- `useTaskLabels` meniru persis pola batch-fetch-then-merge `useTaskAssignees` — pola standar untuk fitur many-to-many task-scoped berikutnya
+- Warna label pakai color picker bebas, bukan palet tetap, atas pilihan eksplisit user
+- Di luar scope: filter by label, label bawaan/preset, batasan jumlah label per task
+
+### Status
+- Kode selesai di `main`, semua 7 task + QA APPROVED lewat subagent-driven development. Belum di-push/deploy. Sisa pending maintainer: E2E manual, push ke `origin/main`
+
 ## [Fase 6.1] - 2026-09-08
 ### Added
 - Multi-assignee pada task — tabel baru `task_assignees` (composite PK `task_id`+`user_id`, RLS via `is_project_member()`)

@@ -133,6 +133,23 @@ Status: **kode selesai di `main`, diimplementasi lewat subagent-driven developme
   - [ ] Manual E2E walkthrough (assign/unassign lewat chip, avatar stack update di card) — **pending maintainer**: butuh browser + sesi login
   - [x] PROGRESS/CHANGELOG/MEMORY diperbarui
 
+## Fase 6.2 — Labels
+Plan: docs/superpowers/plans/2026-09-08-fase6-labels-implementation.md
+Spec: docs/superpowers/specs/2026-09-08-fase6-labels-design.md
+Status: **kode selesai di `main`, diimplementasi lewat subagent-driven development (implementer → reviewer per task), semua APPROVED.** Migrasi sudah di-apply ke DB live. Belum di-deploy (belum di-push ke `origin/main`).
+
+- [x] Task 0: Migrasi `labels` + `task_labels` (composite PK, RLS via `is_project_member()`) + regen `database.types.ts` (commit `5e7d3d8`)
+- [x] Task 1: Komponen `LabelBadge` — pill warna dengan kontras teks berbasis luminance (commit `726f13d`)
+- [x] Task 2: Hooks `useLabels` (CRUD) + `useTaskLabels` (batch read per project) + `useToggleTaskLabel` (commit `9ede5ce`)
+- [x] Task 3: `LabelsDialog.tsx` — kelola label (create/edit/delete) + menu "Labels" di header board (commit `ecb4a4e`)
+- [x] Task 4: `TaskCard.tsx` — baris pill label di atas avatar stack (commit `850802e`)
+- [x] Task 5: `TaskDialog.tsx` — chip picker label + tombol "Manage labels" (commit `47f87dd`)
+- [x] Task 6: QA akhir + dokumentasi
+  - [x] Build (`npm run build` → `tsc -b && vite build`) — exit 0
+  - [x] Lint (`npm run lint` → `oxlint`) — bersih, tanpa output
+  - [ ] Manual E2E walkthrough (create/edit/delete label, toggle pada task, lihat pill di card & dialog) — **pending maintainer**: butuh browser + sesi login
+  - [x] PROGRESS/CHANGELOG/MEMORY diperbarui
+
 ## Deployment
 
 | | |
