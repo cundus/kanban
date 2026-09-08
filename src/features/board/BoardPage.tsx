@@ -23,14 +23,29 @@ import {
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable"
-import { ArrowLeftIcon, Columns3Icon } from "lucide-react"
+import {
+  ArchiveIcon,
+  ArrowLeftIcon,
+  Columns3Icon,
+  DownloadIcon,
+  MoreVerticalIcon,
+  UsersIcon,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip } from "@/components/ui/tooltip"
 import { EmptyState } from "@/components/ui/empty-state"
+import {
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuTrigger,
+} from "@/components/ui/menu"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import type { Database } from "@/types/database.types"
+import { ArchivedDialog } from "./ArchivedDialog"
 import { ListColumn } from "./ListColumn"
 import { TaskCard } from "./TaskCard"
 import { TaskDialog } from "./TaskDialog"
@@ -74,6 +89,7 @@ export function BoardPage() {
 
   const [newListName, setNewListName] = useState("")
   const [membersOpen, setMembersOpen] = useState(false)
+  const [archivedOpen, setArchivedOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const taskIdFromUrl = searchParams.get("task")
   const [autoFocusTitle, setAutoFocusTitle] = useState(false)
@@ -304,12 +320,27 @@ export function BoardPage() {
             </Button>
           </Tooltip>
           <h1 className="text-heading text-text-1">{project?.name ?? "Board"}</h1>
-          <Button variant="ghost" onClick={() => setMembersOpen(true)}>
-            Members
-          </Button>
-          <Button variant="ghost" onClick={() => void exportNow()}>
-            Export
-          </Button>
+          <Menu>
+            <MenuTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" aria-label="Board menu">
+                  <MoreVerticalIcon size={16} />
+                </Button>
+              }
+            />
+            <MenuContent>
+              <MenuItem onClick={() => setMembersOpen(true)}>
+                <UsersIcon /> Members
+              </MenuItem>
+              <MenuItem onClick={() => void exportNow()}>
+                <DownloadIcon /> Export
+              </MenuItem>
+              <MenuSeparator />
+              <MenuItem onClick={() => setArchivedOpen(true)}>
+                <ArchiveIcon /> Archived
+              </MenuItem>
+            </MenuContent>
+          </Menu>
         </div>
         <div className="flex items-center gap-2">
           <Input
@@ -420,6 +451,12 @@ export function BoardPage() {
           onOpenChange={setMembersOpen}
         />
       )}
+
+      <ArchivedDialog
+        projectId={projectId}
+        open={archivedOpen}
+        onOpenChange={setArchivedOpen}
+      />
     </div>
   )
 }
