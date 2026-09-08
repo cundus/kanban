@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useEffect, useMemo, useState } from "react"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { toast } from "sonner"
 import {
   DndContext,
   DragOverlay,
@@ -73,7 +74,9 @@ export function BoardPage() {
 
   const [newListName, setNewListName] = useState("")
   const [membersOpen, setMembersOpen] = useState(false)
-  const [openTaskId, setOpenTaskId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const taskIdFromUrl = searchParams.get("task")
+  const [autoFocusTitle, setAutoFocusTitle] = useState(false)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [activeList, setActiveList] = useState<List | null>(null)
   const [dndTasks, setDndTasks] = useState<Task[] | null>(null)
@@ -114,6 +117,35 @@ export function BoardPage() {
   function handleAddList() {
     if (!newListName.trim()) return
     createList.mutate(newListName, { onSuccess: () => setNewListName("") })
+  }
+
+  function handleOpenTask(taskId: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set("task", taskId)
+      return next
+    })
+  }
+
+  function handleCloseTaskDialog() {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete("task")
+        return next
+      },
+      { replace: true }
+    )
+    setAutoFocusTitle(false)
+  }
+
+  function handleRenameTask(taskId: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set("task", taskId)
+      return next
+    })
+    setAutoFocusTitle(true)
   }
 
   function onDragStart(event: DragStartEvent) {
@@ -332,7 +364,8 @@ export function BoardPage() {
                   list={list}
                   projectId={projectId}
                   tasks={tasksByList.get(list.id) ?? []}
-                  onOpenTask={(taskId) => setOpenTaskId(taskId)}
+                  onOpenTask={handleOpenTask}
+                  onRenameTask={handleRenameTask}
                 />
               ))}
             </SortableContext>
@@ -353,6 +386,7 @@ export function BoardPage() {
               listId={activeTask.list_id}
               projectId={projectId}
               onOpen={() => {}}
+              onRenameTask={() => {}}
               overlay
             />
           ) : activeList ? (
@@ -361,19 +395,20 @@ export function BoardPage() {
               projectId={projectId}
               tasks={tasksByList.get(activeList.id) ?? []}
               onOpenTask={() => {}}
+              onRenameTask={() => {}}
               overlay
             />
           ) : null}
         </DragOverlay>
       </DndContext>
 
-      {openTaskId && (
+      {taskIdFromUrl && (
         <TaskDialogForOpenTask
-          taskId={openTaskId}
+          taskId={taskIdFromUrl}
           tasks={allTasks ?? []}
           projectId={projectId}
-          autoFocusTitle={false}
-          onOpenChange={(open) => !open && setOpenTaskId(null)}
+          autoFocusTitle={autoFocusTitle}
+          onOpenChange={(open) => !open && handleCloseTaskDialog()}
         />
       )}
 
@@ -403,6 +438,15 @@ function TaskDialogForOpenTask({
   autoFocusTitle?: boolean
 }) {
   const task = tasks.find((t) => t.id === taskId) ?? null
+
+  // Only fire the "not found" toast once tasks have actually loaded — before
+  // then, an absent task is just the initial fetch, not a stale/bad URL.
+  useEffect(() => {
+    if (taskId && !task && tasks.length > 0) {
+      toast.error("Task tidak ditemukan.")
+      onOpenChange(false)
+    }
+  }, [taskId, task, tasks.length, onOpenChange])
 
   return (
     <TaskDialog

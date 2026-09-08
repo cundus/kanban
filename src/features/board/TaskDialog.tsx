@@ -12,6 +12,7 @@ import { MarkdownEditor } from "./MarkdownEditor"
 import { TaskActionsMenu } from "./TaskActionsMenu"
 import { formatRelativeTime } from "@/lib/formatRelativeTime"
 import type { Database } from "@/types/database.types"
+import { useMembers } from "@/features/members/useMembers"
 import { useUpdateTask } from "./useTasks"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
@@ -36,6 +37,7 @@ export function TaskDialog({
   const [descriptionDirty, setDescriptionDirty] = useState(false)
   const [dueDate, setDueDate] = useState("")
   const updateTask = useUpdateTask(projectId)
+  const { data: members } = useMembers(projectId)
 
   // Reset on task identity change only — not full object — so an in-flight
   // autosave that updates the cached task object doesn't reset these fields
@@ -101,10 +103,8 @@ export function TaskDialog({
     )
   }
 
-  // ponytail: creator name resolution stubbed; Task 8 wires a real
-  // useMemberName/useProjectMemberNames hook. "—" is the permanent fallback
-  // for unknown/missing creator either way.
-  const creatorName = "—"
+  const creator = members?.find((m) => m.user_id === currentTask.created_by)
+  const creatorName = creator?.profile?.full_name ?? creator?.profile?.email ?? "—"
   const updatedRelative = formatRelativeTime(currentTask.updated_at)
 
   return (

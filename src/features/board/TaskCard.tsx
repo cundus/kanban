@@ -11,12 +11,14 @@ export function TaskCard({
   listId,
   projectId,
   onOpen,
+  onRenameTask,
   overlay = false,
 }: {
   task: Task
   listId: string
   projectId: string
   onOpen: () => void
+  onRenameTask: () => void
   overlay?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -43,7 +45,7 @@ export function TaskCard({
   }
 
   return (
-    <TaskActionsMenu task={task} projectId={projectId} variant="context" onRename={onOpen}>
+    <TaskActionsMenu task={task} projectId={projectId} variant="context" onRename={onRenameTask}>
       <article
         ref={setNodeRef}
         style={style}
@@ -60,7 +62,7 @@ export function TaskCard({
           className="absolute right-1 top-1 opacity-0 transition-opacity group-hover/card:opacity-100 sm:opacity-0 max-sm:opacity-100"
           onClick={(e) => e.stopPropagation()}
         >
-          <TaskActionsMenu task={task} projectId={projectId} variant="dropdown" onRename={onOpen} />
+          <TaskActionsMenu task={task} projectId={projectId} variant="dropdown" onRename={onRenameTask} />
         </div>
       </article>
     </TaskActionsMenu>

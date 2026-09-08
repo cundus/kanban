@@ -20,12 +20,14 @@ export function ListColumn({
   projectId,
   tasks,
   onOpenTask,
+  onRenameTask,
   overlay = false,
 }: {
   list: List
   projectId: string
   tasks: Task[]
   onOpenTask: (taskId: string) => void
+  onRenameTask: (taskId: string) => void
   overlay?: boolean
 }) {
   const createTask = useCreateTask(list.id, projectId)
@@ -128,6 +130,7 @@ export function ListColumn({
               listId={list.id}
               projectId={projectId}
               onOpen={() => onOpenTask(task.id)}
+              onRenameTask={() => onRenameTask(task.id)}
             />
           ))}
         </SortableContext>
