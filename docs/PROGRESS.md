@@ -95,6 +95,28 @@ Status: **deployed to production pada 2026-09-07** — branch di-merge ke `main`
   - [x] Step 6-9: PROGRESS/CHANGELOG/MEMORY diperbarui, commit dokumentasi dibuat
 - [x] Merge `fase4-import-export` → `main` + deploy — **selesai 2026-09-07** (`65dfb05..77dfa71` fast-forward, push `main` → auto-deploy webhook, HTTP 200, bundle `index-D5xNrsS_.js`; tanpa migrasi DB)
 
+## Fase 5 — Task Actions (Duplicate/Archive/Delete) + Task Dialog Upgrade
+Plan: docs/superpowers/plans/2026-09-08-personal-kanban-fase5-task-actions.md
+Spec: docs/superpowers/specs/2026-09-08-personal-kanban-fase5-design.md
+Status: **kode selesai di branch `feat/fase5-task-actions`, belum di-merge ke `main`, belum di-deploy.** Semua 9 task diimplementasi lewat subagent-driven development (implementer → controller re-verify → reviewer independen), semua APPROVED.
+
+- [x] Task 0-1: Migrasi `tasks.archived_at` + partial index `tasks_active_by_list_idx` + regen `database.types.ts` (commit `66f154f`)
+- [x] Task 2: `useTasks.ts` filter task aktif, hooks `useDuplicateTask`/`useArchiveTask` (optimistic)/`useRestoreTask`/`useDeleteTask` (commit `fab58aa`)
+- [x] Task 3: `MenuSubmenu` primitive + `context-menu.tsx` wrapper di `src/components/ui/` (commit `7654bc7`)
+- [x] Task 4: `TaskActionsMenu.tsx` — menu `...` (Duplicate/Archive/Delete) dipakai task card & dialog header (commit `db88c45`)
+- [x] Task 5: `ListActionsMenu.tsx` + `useCreateTask` param posisi + `ListColumn.tsx` (add-to-top, hapus tombol delete berdiri sendiri) (commit `c4a8eb6`)
+- [x] Task 6: `TaskCard.tsx` dibungkus `TaskActionsMenu` — varian context-menu (desktop) + dropdown tombol (mobile) (commit `d241810`)
+- [x] Task 7: `TaskDialog.tsx` upgrade — autosave per-field saat blur, layout 2 kolom, `dialog.tsx` CVA `size` prop (`default`/`lg`), footer metadata "Dibuat oleh / Terakhir diubah" (commit `660c89e`)
+- [x] Task 8: `BoardPage.tsx` deep-link `?task=<id>` via `useSearchParams`, validasi task-id basi (toast "Task tidak ditemukan"), rename autofocus title (commit `26a35d2`)
+- [x] Task 9: `ArchivedDialog.tsx` baru (list task terarsip, restore, delete permanen) + header board dikonsolidasi jadi satu menu `...` (Members/Export/Archived) (commit `280898a`)
+- [x] Final: tambah assertion `positionBetween(null, null)` (kasus add-to-top di list kosong) ke `reorderUtils.selfcheck.ts` — 14/14 PASS (commit `7ee1900`)
+  - [x] Typecheck + build (`npm run build` → `tsc -b && vite build`) — exit 0, hanya warning pre-existing chunk >500 kB
+  - [x] Lint (`npm run lint` → `oxlint`) — bersih, tanpa output
+  - [x] Self-check posisi (`npx tsx src/features/board/reorderUtils.selfcheck.ts`) — 14/14 PASS
+  - [ ] Manual E2E walkthrough (dialog dua kolom, autosave blur, context-menu desktop vs dropdown mobile, archive/restore/delete, deep-link `?task=`) — **pending maintainer**: butuh browser + sesi login, belum dijalankan agen
+  - [ ] Migrasi `archived_at` — **belum di-apply ke DB live**, pending maintainer via `pnpm migrate:up`
+  - [ ] Merge `feat/fase5-task-actions` → `main` + deploy — pending keputusan maintainer
+
 ## Deployment
 
 | | |

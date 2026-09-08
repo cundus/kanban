@@ -1,5 +1,30 @@
 # Changelog
 
+## [Fase 5] - 2026-09-08
+### Added
+- Menu aksi `...` pada task card (Duplicate, Archive, Delete) — context-menu klik-kanan di desktop, tombol dropdown di mobile
+- Menu aksi `...` pada list column (Rename, Add task to top, Delete)
+- Archive task: soft-delete via kolom `tasks.archived_at`, task terarsip hilang dari board tapi bisa dipulihkan
+- Dialog "Task Terarsip" — daftar task yang di-archive, tombol Restore per task, Delete permanen (dengan konfirmasi)
+- Duplicate task — salinan langsung di list yang sama, posisi setelah task asal
+- Task dialog kini mendukung deep-link `?task=<id>` di URL — bisa dibagikan/refresh tanpa kehilangan dialog yang terbuka
+- Autosave per-field pada task dialog (title/description tersimpan otomatis saat blur, tanpa tombol Save)
+- Footer metadata pada task dialog: "Dibuat oleh {nama}" + "Terakhir diubah {relatif}"
+
+### Changed
+- Task dialog diperlebar jadi layout 2 kolom (`dialog.tsx` dapat CVA `size` prop: `default`/`lg`)
+- Header board dikonsolidasi — tombol Members + Export digabung jadi satu menu `...`, ditambah item Archived
+- Rename task dari context-menu kini auto-focus ke field title saat dialog terbuka
+
+### Notes
+- Migrasi `archived_at` (kolom + partial index `tasks_active_by_list_idx`) — **belum di-apply ke DB live**, pending maintainer
+- Archive bersifat optimistic (rollback + toast bila gagal); Duplicate/Restore/Delete permanen tidak optimistic (tunggu konfirmasi server)
+- Tidak ada dependency baru — semua primitif menu (`MenuSubmenu`, context-menu) dibangun di atas `@base-ui/react` yang sudah ada
+- Long-press context-menu di mobile punya keterbatasan diketahui: dnd-kit `TouchSensor` menang atas long-press base-ui context-menu (didokumentasikan sebagai limitation, bukan bug) — makanya mobile pakai tombol dropdown terpisah, bukan long-press
+
+### Status
+- Kode selesai di branch `feat/fase5-task-actions`, semua 9 task + final QA APPROVED lewat subagent-driven development. **Belum di-merge ke `main`, belum di-deploy.** Sisa pending maintainer: apply migrasi live, E2E manual, merge + deploy
+
 ## [Fase 4] - 2026-09-07
 ### Added
 - Export project ke file JSON dari header board (owner & member) — project + list + task + metadata versi/timestamp, diunduh langsung di browser
