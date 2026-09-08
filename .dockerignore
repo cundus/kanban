@@ -1,0 +1,12 @@
+node_modules
+mcp-server/node_modules
+dist
+mcp-server/dist
+.git
+.env
+.env.local
+mcp-server/.env
+mcp-server/.env.local
+public
+docs
+.superpowers

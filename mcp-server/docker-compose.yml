@@ -1,0 +1,10 @@
+services:
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: mcp-server/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    env_file:
+      - .env
