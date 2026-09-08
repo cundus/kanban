@@ -13,6 +13,7 @@ export function registerLabelTools(server: McpServer, userId: string): void {
       try {
         await assertProjectMember(userId, project_id)
       } catch (err) {
+        if (!(err instanceof McpError)) console.error(err)
         const message = err instanceof McpError ? err.message : "Unexpected error"
         return { content: [{ type: "text", text: `Error: ${message}` }], isError: true }
       }
@@ -24,7 +25,8 @@ export function registerLabelTools(server: McpServer, userId: string): void {
         .order("created_at")
 
       if (error) {
-        return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true }
+        console.error("list_labels DB error:", error.message)
+        return { content: [{ type: "text", text: "Error: Failed to list labels" }], isError: true }
       }
       return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] }
     }

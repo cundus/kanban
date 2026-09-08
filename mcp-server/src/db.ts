@@ -17,6 +17,9 @@ export async function assertProjectMember(userId: string, projectId: string): Pr
     p_user_id: userId,
     p_project_id: projectId,
   })
-  if (error) throw new McpError(`RPC is_project_member_for_user failed: ${error.message}`)
+  if (error) {
+    console.error("assertProjectMember RPC failed:", error.message)
+    throw new McpError("Failed to verify project membership")
+  }
   if (!data) throw new McpError("Not a member of this project")
 }
