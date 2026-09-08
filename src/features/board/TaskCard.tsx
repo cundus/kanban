@@ -6,6 +6,8 @@ import { Avatar } from "@/components/ui/avatar"
 import { TaskActionsMenu } from "./TaskActionsMenu"
 import { useTaskAssignees } from "./useTaskAssignees"
 import type { AssigneeProfile } from "./useTaskAssignees"
+import { LabelBadge } from "@/components/ui/label-badge"
+import { useTaskLabels } from "./useLabels"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -30,6 +32,9 @@ export function TaskCard({
   const { data: assigneesByTask } = useTaskAssignees(projectId)
   const assignees = assigneesByTask?.[task.id] ?? []
 
+  const { data: labelsByTask } = useTaskLabels(projectId)
+  const labels = labelsByTask?.[task.id] ?? []
+
   // Transform (not Translate) so neighbours animate fully when a gap opens.
   // opacity 0 hides the source while DragOverlay follows the cursor; dnd-kit
   // keeps this node mounted so the slot stays reserved.
@@ -46,6 +51,13 @@ export function TaskCard({
         className="elev-lifted rounded-lg border border-accent-line bg-surface-2 px-3 py-2.5 text-ui text-text-1 rotate-2 scale-[1.03] cursor-grabbing"
       >
         {task.title}
+        {labels.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {labels.map((label) => (
+              <LabelBadge key={label.id} name={label.name} color={label.color} />
+            ))}
+          </div>
+        )}
         {assignees.length > 0 && <AvatarStack assignees={assignees} />}
       </article>
     )
@@ -65,6 +77,13 @@ export function TaskCard({
         )}
       >
         {task.title}
+        {labels.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {labels.map((label) => (
+              <LabelBadge key={label.id} name={label.name} color={label.color} />
+            ))}
+          </div>
+        )}
         {assignees.length > 0 && <AvatarStack assignees={assignees} />}
         <div
           className="absolute right-1 top-1 opacity-0 transition-opacity group-hover/card:opacity-100 sm:opacity-0 max-sm:opacity-100"
