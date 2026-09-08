@@ -62,6 +62,11 @@ assertEqual(positionBetween(1024, 2048), 1536, "positionBetween tengah = rata-ra
 assertEqual(positionBetween(null, 1024), 512, "positionBetween awal = first / 2")
 assertEqual(positionBetween(3072, null), 4096, "positionBetween akhir = prev + STEP")
 assertEqual(
+  positionBetween(null, null),
+  POSITION_STEP,
+  "positionBetween list kosong (add-to-top) = STEP"
+)
+assertEqual(
   positionForIndex(frac, 2, "a"),
   positionBetween(2048, 3072),
   "positionForIndex abaikan item yang dipindah"
