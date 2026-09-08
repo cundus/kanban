@@ -2,10 +2,26 @@
 
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+
+const dialogContentVariants = cva(
+  "elev-overlay fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border border-line bg-surface-2 p-4 text-ui text-text-2 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+  {
+    variants: {
+      size: {
+        default: "sm:max-w-dialog",
+        lg: "sm:max-w-2xl",
+      },
+    },
+    defaultVariants: {
+      size: "default",
+    },
+  }
+)
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -43,19 +59,17 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  size,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
-}) {
+} & VariantProps<typeof dialogContentVariants>) {
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
-        className={cn(
-          "elev-overlay fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border border-line bg-surface-2 p-4 text-ui text-text-2 duration-100 outline-none sm:max-w-dialog data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className
-        )}
+        className={cn(dialogContentVariants({ size }), className)}
         {...props}
       >
         {children}

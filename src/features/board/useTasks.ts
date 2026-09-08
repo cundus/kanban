@@ -64,21 +64,16 @@ export function useCreateTask(listId: string, projectId: string) {
 export function useUpdateTask(projectId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: {
+    mutationFn: async ({
+      id,
+      ...fields
+    }: Partial<Pick<Task, "title" | "description_md" | "due_date">> & {
       id: string
-      title: string
-      description_md: string | null
-      due_date: string | null
     }) => {
       const { error } = await supabase
         .from("tasks")
-        .update({
-          title: input.title,
-          description_md: input.description_md,
-          due_date: input.due_date,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", input.id)
+        .update({ ...fields, updated_at: new Date().toISOString() })
+        .eq("id", id)
       if (error) throw error
     },
     onSuccess: () => {

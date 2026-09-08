@@ -372,6 +372,7 @@ export function BoardPage() {
           taskId={openTaskId}
           tasks={allTasks ?? []}
           projectId={projectId}
+          autoFocusTitle={false}
           onOpenChange={(open) => !open && setOpenTaskId(null)}
         />
       )}
@@ -393,15 +394,23 @@ function TaskDialogForOpenTask({
   tasks,
   projectId,
   onOpenChange,
+  autoFocusTitle,
 }: {
   taskId: string
   tasks: Task[]
   projectId: string
   onOpenChange: (open: boolean) => void
+  autoFocusTitle?: boolean
 }) {
   const task = tasks.find((t) => t.id === taskId) ?? null
 
   return (
-    <TaskDialog task={task} projectId={projectId} open={!!task} onOpenChange={onOpenChange} />
+    <TaskDialog
+      task={task}
+      projectId={projectId}
+      open={!!task}
+      onOpenChange={onOpenChange}
+      autoFocusTitle={autoFocusTitle}
+    />
   )
 }
