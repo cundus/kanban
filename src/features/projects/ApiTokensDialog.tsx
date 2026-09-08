@@ -31,14 +31,19 @@ function ApiTokensDialog({ userId, open, onOpenChange }: ApiTokensDialogProps) {
     })
   }
 
-  function copyRevealedToken() {
+  async function copyRevealedToken() {
     if (!revealedToken) return
-    navigator.clipboard.writeText(revealedToken)
-    toast.success("Token disalin.")
+    try {
+      await navigator.clipboard.writeText(revealedToken)
+      toast.success("Token disalin.")
+    } catch (e) {
+      console.error(e)
+      toast.error("Gagal menyalin. Salin manual dari kotak di atas.")
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setRevealedToken(null) }}>
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) { setRevealedToken(null); createToken.reset() } }}>
       <DialogContent size="lg">
         <DialogHeader><DialogTitle>API Tokens</DialogTitle></DialogHeader>
 
@@ -47,7 +52,7 @@ function ApiTokensDialog({ userId, open, onOpenChange }: ApiTokensDialogProps) {
             <p className="text-label text-text-3">Salin token ini sekarang — tidak akan ditampilkan lagi.</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 truncate rounded bg-surface-2 px-2 py-1 text-micro text-text-1">{revealedToken}</code>
-              <Button size="sm" onClick={copyRevealedToken}><CopyIcon size={14} /></Button>
+              <Button size="sm" aria-label="Salin token" onClick={copyRevealedToken}><CopyIcon size={14} /></Button>
             </div>
             <Button size="sm" variant="ghost" onClick={() => setRevealedToken(null)}>Selesai</Button>
           </div>
@@ -77,8 +82,8 @@ function ApiTokensDialog({ userId, open, onOpenChange }: ApiTokensDialogProps) {
         </div>
 
         <div className="flex items-center gap-2 border-t border-line-subtle pt-3">
-          <Input placeholder="Nama token (mis. Claude Code)" value={newName} onChange={(e) => setNewName(e.target.value)} className="flex-1" onKeyDown={(e) => e.key === "Enter" && handleCreate()} />
-          <Button onClick={handleCreate} disabled={!newName.trim()}>Buat</Button>
+          <Input placeholder="Nama token (mis. Claude Code)" value={newName} onChange={(e) => setNewName(e.target.value)} className="flex-1" onKeyDown={(e) => e.key === "Enter" && !createToken.isPending && handleCreate()} />
+          <Button onClick={handleCreate} disabled={!newName.trim() || createToken.isPending}>Buat</Button>
         </div>
       </DialogContent>
       <ConfirmDialog

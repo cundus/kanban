@@ -27,7 +27,7 @@ export function useApiTokens(userId: string) {
     queryFn: async (): Promise<ApiToken[]> => {
       const { data, error } = await supabase.from("mcp_tokens").select("*").eq("user_id", userId).order("created_at")
       if (error) throw error
-      return data as ApiToken[]
+      return data
     },
   })
 }
@@ -43,7 +43,7 @@ export function useCreateApiToken(userId: string) {
       return rawToken
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: apiTokensKey(userId) }) },
-    onError: () => { toast.error("Gagal membuat token.") },
+    onError: (e) => { console.error(e); toast.error("Gagal membuat token.") },
   })
 }
 
@@ -55,6 +55,6 @@ export function useRevokeApiToken(userId: string) {
       if (error) throw error
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: apiTokensKey(userId) }) },
-    onError: () => { toast.error("Gagal mencabut token.") },
+    onError: (e) => { console.error(e); toast.error("Gagal mencabut token.") },
   })
 }
