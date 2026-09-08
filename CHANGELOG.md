@@ -1,5 +1,22 @@
 # Changelog
 
+## [Fase 6.1] - 2026-09-08
+### Added
+- Multi-assignee pada task — tabel baru `task_assignees` (composite PK `task_id`+`user_id`, RLS via `is_project_member()`)
+- Avatar stack di task card — maks 3 avatar bertumpuk + badge `+N` untuk sisanya
+- Chip picker assignee di task dialog — klik chip nama member untuk assign/unassign instan, tanpa tombol Save
+- Komponen `Avatar` baru (`src/components/ui/avatar.tsx`) — foto profil atau inisial dengan warna hash deterministik per nama
+
+### Notes
+- Tidak ada dependency baru
+- `useToggleAssignee` tidak optimistic (beda dari `useArchiveTask` Fase 5) — tunggu konfirmasi server sebelum invalidate cache
+- `TaskCard` dan `TaskDialog` sama-sama memanggil `useTaskAssignees(projectId)` secara independen — React Query men-dedupe fetch lewat queryKey yang sama, tanpa perlu prop-drilling
+- Migrasi `20260908010000_task_assignees.sql` + `20260908011000_task_assignees_rls_fix.sql` **sudah di-apply** ke DB live
+- Di luar scope: filter by assignee, notifikasi, batasan single-assignee
+
+### Status
+- Kode selesai di `main`, semua 6 task + QA APPROVED lewat subagent-driven development. Belum di-push/deploy. Sisa pending maintainer: E2E manual, push ke `origin/main`
+
 ## [Fase 5] - 2026-09-08
 ### Added
 - Menu aksi `...` pada task card (Duplicate, Archive, Delete) — context-menu klik-kanan di desktop, tombol dropdown di mobile

@@ -117,6 +117,22 @@ Status: **kode selesai di branch `feat/fase5-task-actions`, belum di-merge ke `m
   - [ ] Migrasi `archived_at` — **belum di-apply ke DB live**, pending maintainer via `pnpm migrate:up`
   - [ ] Merge `feat/fase5-task-actions` → `main` + deploy — pending keputusan maintainer
 
+## Fase 6.1 — Assignee
+Plan: docs/superpowers/plans/2026-09-08-fase6-assignee-task-actions.md
+Spec: docs/superpowers/specs/2026-09-08-fase6-assignee-design.md
+Status: **kode selesai di `main`, diimplementasi lewat subagent-driven development (implementer → spec reviewer → code-quality reviewer per task), semua APPROVED.** Migrasi sudah di-apply ke DB live. Belum di-deploy (belum di-push ke `origin/main`).
+
+- [x] Task 0: Migrasi `task_assignees` (composite PK, index `user_id`, RLS) + regen `database.types.ts` (commit `c42af46`, fix keamanan RLS pakai helper `is_project_member()` di commit `1b299a1`)
+- [x] Task 1: Komponen `Avatar` — inisial dengan warna hash deterministik, fallback foto profil (commit `4057351`)
+- [x] Task 2: Hooks `useTaskAssignees` (batch read per project) + `useToggleAssignee` (mutation, non-optimistic) (commit `7efceea`)
+- [x] Task 3: `TaskCard.tsx` — avatar stack (maks 3 + badge `+N`) di bawah judul task (commit `368619a`)
+- [x] Task 4: `TaskDialog.tsx` — chip picker assignee di kolom kanan, toggle instan tanpa tombol Save (commit `9f91ccc`)
+- [x] Task 5: QA akhir + dokumentasi
+  - [x] Build (`npm run build` → `tsc -b && vite build`) — exit 0
+  - [x] Lint (`npm run lint` → `oxlint`) — bersih, tanpa output
+  - [ ] Manual E2E walkthrough (assign/unassign lewat chip, avatar stack update di card) — **pending maintainer**: butuh browser + sesi login
+  - [x] PROGRESS/CHANGELOG/MEMORY diperbarui
+
 ## Deployment
 
 | | |
