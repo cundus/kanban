@@ -29,6 +29,7 @@ import {
   Columns3Icon,
   DownloadIcon,
   MoreVerticalIcon,
+  TagIcon,
   UsersIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -46,6 +47,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle"
 import type { Database } from "@/types/database.types"
 import { ArchivedDialog } from "./ArchivedDialog"
+import { LabelsDialog } from "./LabelsDialog"
 import { ListColumn } from "./ListColumn"
 import { TaskCard } from "./TaskCard"
 import { TaskDialog } from "./TaskDialog"
@@ -90,6 +92,7 @@ export function BoardPage() {
   const [newListName, setNewListName] = useState("")
   const [membersOpen, setMembersOpen] = useState(false)
   const [archivedOpen, setArchivedOpen] = useState(false)
+  const [labelsOpen, setLabelsOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const taskIdFromUrl = searchParams.get("task")
   const [autoFocusTitle, setAutoFocusTitle] = useState(false)
@@ -332,6 +335,9 @@ export function BoardPage() {
               <MenuItem onClick={() => setMembersOpen(true)}>
                 <UsersIcon /> Members
               </MenuItem>
+              <MenuItem onClick={() => setLabelsOpen(true)}>
+                <TagIcon /> Labels
+              </MenuItem>
               <MenuItem onClick={() => void exportNow()}>
                 <DownloadIcon /> Export
               </MenuItem>
@@ -456,6 +462,12 @@ export function BoardPage() {
         projectId={projectId}
         open={archivedOpen}
         onOpenChange={setArchivedOpen}
+      />
+
+      <LabelsDialog
+        projectId={projectId}
+        open={labelsOpen}
+        onOpenChange={setLabelsOpen}
       />
     </div>
   )
