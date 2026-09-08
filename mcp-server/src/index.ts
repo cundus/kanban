@@ -10,7 +10,11 @@ import { registerLabelTools } from "./tools/label.js"
 import { registerTaskTools } from "./tools/task.js"
 import { startKeepalive } from "./keepalive.js"
 
-const PORT = Number(process.env.PORT ?? 3100)
+process.on("unhandledRejection", (reason) => console.error("unhandledRejection:", reason))
+process.on("uncaughtException", (err) => console.error("uncaughtException:", err))
+
+const rawPort = Number(process.env.PORT ?? 3100)
+const PORT = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : 3100
 
 const app = new Hono<{ Bindings: HttpBindings }>()
 
@@ -27,14 +31,23 @@ app.post("/mcp", authMiddleware, async (c) => {
     registerTaskTools(server, userId)
 
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
+    c.env.outgoing.on("close", () => {
+      void transport.close()
+      void server.close()
+    })
     await server.connect(transport)
 
-    const body = await c.req.json().catch(() => undefined)
+    let body: unknown
+    try {
+      body = await c.req.json()
+    } catch {
+      return c.json({ error: "Invalid JSON body" }, 400)
+    }
     await transport.handleRequest(c.env.incoming, c.env.outgoing, body)
 
     return RESPONSE_ALREADY_SENT
   } catch (err) {
-    console.error(err)
+    console.error("mcp handler error:", err instanceof Error ? err.message : err)
     if (!c.env.outgoing.headersSent) {
       return c.json({ error: "Internal server error" }, 500)
     }
