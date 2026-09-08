@@ -17,6 +17,9 @@ import { useUpdateTask } from "./useTasks"
 import { cn } from "cn"
 import { Avatar } from "@/components/ui/avatar"
 import { useTaskAssignees, useToggleAssignee } from "./useTaskAssignees"
+import { LabelBadge } from "@/components/ui/label-badge"
+import { useLabels, useTaskLabels, useToggleTaskLabel } from "./useLabels"
+import { LabelsDialog } from "./LabelsDialog"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -39,10 +42,14 @@ export function TaskDialog({
   const [descriptionMd, setDescriptionMd] = useState("")
   const [descriptionDirty, setDescriptionDirty] = useState(false)
   const [dueDate, setDueDate] = useState("")
+  const [labelsDialogOpen, setLabelsDialogOpen] = useState(false)
   const updateTask = useUpdateTask(projectId)
   const { data: members } = useMembers(projectId)
   const { data: assigneesByTask } = useTaskAssignees(projectId)
   const toggleAssignee = useToggleAssignee(task?.id ?? "", projectId)
+  const { data: allLabels } = useLabels(projectId)
+  const { data: labelsByTask } = useTaskLabels(projectId)
+  const toggleLabel = useToggleTaskLabel(task?.id ?? "", projectId)
 
   // Reset on task identity change only — not full object — so an in-flight
   // autosave that updates the cached task object doesn't reset these fields
@@ -121,88 +128,126 @@ export function TaskDialog({
     toggleAssignee.mutate({ userId, isCurrentlyAssigned })
   }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="lg">
-        <DialogHeader className="flex flex-row items-center justify-between gap-2">
-          <Input
-            id={TITLE_INPUT_ID}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={handleTitleBlur}
-            className="text-heading border-none px-0 shadow-none focus-visible:ring-0"
-          />
-          <TaskActionsMenu
-            task={currentTask}
-            projectId={projectId}
-            variant="dropdown"
-            disableRename
-            onRename={() => {}}
-          />
-        </DialogHeader>
+  const currentLabelIds = new Set(
+    (labelsByTask?.[currentTask.id] ?? []).map((l) => l.id)
+  )
 
-        <div className="grid gap-5 md:grid-cols-[1fr_16rem]">
-          <div className="flex flex-col gap-2 md:order-1">
-            <Label>Description</Label>
-            <MarkdownEditor
-              value={descriptionMd}
-              onChange={(v) => {
-                setDescriptionMd(v)
-                setDescriptionDirty(true)
-              }}
+  function handleToggleLabel(labelId: string) {
+    const isCurrentlyApplied = currentLabelIds.has(labelId)
+    toggleLabel.mutate({ labelId, isCurrentlyApplied })
+  }
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent size="lg">
+          <DialogHeader className="flex flex-row items-center justify-between gap-2">
+            <Input
+              id={TITLE_INPUT_ID}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleTitleBlur}
+              className="text-heading border-none px-0 shadow-none focus-visible:ring-0"
             />
-            {descriptionDirty && (
-              <Button size="sm" onClick={handleDescriptionSave}>
-                Save description
-              </Button>
-            )}
-          </div>
-          <div className="flex flex-col gap-4 md:order-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="task-due-date">Due date</Label>
-              <Input
-                id="task-due-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                onBlur={handleDueDateBlur}
+            <TaskActionsMenu
+              task={currentTask}
+              projectId={projectId}
+              variant="dropdown"
+              disableRename
+              onRename={() => {}}
+            />
+          </DialogHeader>
+
+          <div className="grid gap-5 md:grid-cols-[1fr_16rem]">
+            <div className="flex flex-col gap-2 md:order-1">
+              <Label>Description</Label>
+              <MarkdownEditor
+                value={descriptionMd}
+                onChange={(v) => {
+                  setDescriptionMd(v)
+                  setDescriptionDirty(true)
+                }}
               />
+              {descriptionDirty && (
+                <Button size="sm" onClick={handleDescriptionSave}>
+                  Save description
+                </Button>
+              )}
             </div>
-            <div className="flex flex-col gap-2">
-              <Label>Assignee</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {(members ?? [])
-                  .filter((m) => m.user_id)
-                  .map((m) => {
-                    const userId = m.user_id as string
-                    const isAssigned = currentAssigneeIds.has(userId)
-                    const name = m.profile?.full_name ?? m.profile?.email ?? m.invited_email
+            <div className="flex flex-col gap-4 md:order-2">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="task-due-date">Due date</Label>
+                <Input
+                  id="task-due-date"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  onBlur={handleDueDateBlur}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label>Assignee</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {(members ?? [])
+                    .filter((m) => m.user_id)
+                    .map((m) => {
+                      const userId = m.user_id as string
+                      const isAssigned = currentAssigneeIds.has(userId)
+                      const name = m.profile?.full_name ?? m.profile?.email ?? m.invited_email
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => handleToggleAssignee(userId)}
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-micro transition-colors [transition-duration:var(--dur-fast)]",
+                            isAssigned
+                              ? "border-accent-line bg-accent-soft text-accent-solid"
+                              : "border-line text-text-3 hover:border-line-strong hover:text-text-2"
+                          )}
+                        >
+                          <Avatar name={name} src={m.profile?.avatar_url} size="sm" />
+                          {name}
+                        </button>
+                      )
+                    })}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Label</Label>
+                  <Button variant="ghost" size="sm" onClick={() => setLabelsDialogOpen(true)}>
+                    Manage labels
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(allLabels ?? []).map((label) => {
+                    const isApplied = currentLabelIds.has(label.id)
                     return (
                       <button
-                        key={m.id}
+                        key={label.id}
                         type="button"
-                        onClick={() => handleToggleAssignee(userId)}
+                        onClick={() => handleToggleLabel(label.id)}
                         className={cn(
-                          "flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-micro transition-colors [transition-duration:var(--dur-fast)]",
-                          isAssigned
-                            ? "border-accent-line bg-accent-soft text-accent-solid"
-                            : "border-line text-text-3 hover:border-line-strong hover:text-text-2"
+                          "transition-opacity [transition-duration:var(--dur-fast)]",
+                          !isApplied && "opacity-40 hover:opacity-70"
                         )}
                       >
-                        <Avatar name={name} src={m.profile?.avatar_url} size="sm" />
-                        {name}
+                        <LabelBadge name={label.name} color={label.color} />
                       </button>
                     )
                   })}
+                </div>
+              </div>
+              <div className="flex flex-col gap-1 text-micro text-text-4">
+                <span>Dibuat oleh {creatorName}</span>
+                <span>Terakhir diubah {updatedRelative}</span>
               </div>
             </div>
-            <div className="flex flex-col gap-1 text-micro text-text-4">
-              <span>Dibuat oleh {creatorName}</span>
-              <span>Terakhir diubah {updatedRelative}</span>
-            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+      <LabelsDialog projectId={projectId} open={labelsDialogOpen} onOpenChange={setLabelsDialogOpen} />
+    </>
   )
 }
