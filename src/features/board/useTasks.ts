@@ -7,7 +7,7 @@ import { archivedTasksKey } from "./useArchivedTasks"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
-function tasksKey(projectId: string) {
+export function tasksKey(projectId: string) {
   return ["tasks", projectId] as const
 }
 
