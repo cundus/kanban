@@ -98,7 +98,7 @@ Status: **deployed to production pada 2026-09-07** — branch di-merge ke `main`
 ## Fase 5 — Task Actions (Duplicate/Archive/Delete) + Task Dialog Upgrade
 Plan: docs/superpowers/plans/2026-09-08-personal-kanban-fase5-task-actions.md
 Spec: docs/superpowers/specs/2026-09-08-personal-kanban-fase5-design.md
-Status: **kode selesai di branch `feat/fase5-task-actions`, belum di-merge ke `main`, belum di-deploy.** Semua 9 task diimplementasi lewat subagent-driven development (implementer → controller re-verify → reviewer independen), semua APPROVED.
+Status: **deployed to production** — branch `feat/fase5-task-actions` di-merge ke `main`, migrasi `archived_at` sudah di-apply ke DB live, sudah di-push & auto-deploy via webhook (bundle live berisi string Fase 5 mis. "Task tidak ditemukan"). Semua 9 task diimplementasi lewat subagent-driven development (implementer → controller re-verify → reviewer independen), semua APPROVED.
 
 - [x] Task 0-1: Migrasi `tasks.archived_at` + partial index `tasks_active_by_list_idx` + regen `database.types.ts` (commit `66f154f`)
 - [x] Task 2: `useTasks.ts` filter task aktif, hooks `useDuplicateTask`/`useArchiveTask` (optimistic)/`useRestoreTask`/`useDeleteTask` (commit `fab58aa`)
@@ -114,8 +114,8 @@ Status: **kode selesai di branch `feat/fase5-task-actions`, belum di-merge ke `m
   - [x] Lint (`npm run lint` → `oxlint`) — bersih, tanpa output
   - [x] Self-check posisi (`npx tsx src/features/board/reorderUtils.selfcheck.ts`) — 14/14 PASS
   - [ ] Manual E2E walkthrough (dialog dua kolom, autosave blur, context-menu desktop vs dropdown mobile, archive/restore/delete, deep-link `?task=`) — **pending maintainer**: butuh browser + sesi login, belum dijalankan agen
-  - [ ] Migrasi `archived_at` — **belum di-apply ke DB live**, pending maintainer via `pnpm migrate:up`
-  - [ ] Merge `feat/fase5-task-actions` → `main` + deploy — pending keputusan maintainer
+  - [x] Migrasi `archived_at` — **sudah di-apply ke DB live** (urut sebelum migrasi assignee/labels/mcp_tokens yang sudah terverifikasi live)
+  - [x] Merge `feat/fase5-task-actions` → `main` + deploy — **selesai**, auto-deploy via webhook
 
 ## Fase 6.1 — Assignee
 Plan: docs/superpowers/plans/2026-09-08-fase6-assignee-task-actions.md

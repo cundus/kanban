@@ -6,6 +6,7 @@
 - Tabel `mcp_tokens` baru + fungsi `is_project_member_for_user()` (RLS helper untuk konteks service_role tanpa `auth.uid()`)
 - 7 tools MCP: `list_projects`, `list_lists`, `list_labels`, `list_tasks`, `create_task`, `update_task`, `delete_task`
 - Dialog "API Tokens" di menu profil — generate token sekali-lihat (SHA-256 hash disimpan, token mentah tidak pernah persist)
+- Petunjuk setup MCP langsung di dalam dialog "API Tokens" — endpoint, perintah CLI `claude mcp add`, dan config `.mcp.json`; token yang baru dibuat otomatis tertanam di snippet
 - Keep-alive ping tiap 3 hari untuk cegah auto-pause Supabase free-tier
 
 ### Notes
@@ -36,7 +37,7 @@
 - Di luar scope: filter by label, label bawaan/preset, batasan jumlah label per task
 
 ### Status
-- Kode selesai di `main`, semua 7 task + QA APPROVED lewat subagent-driven development. Belum di-push/deploy. Sisa pending maintainer: E2E manual, push ke `origin/main`
+- Kode selesai di `main`, semua 7 task + QA APPROVED lewat subagent-driven development. **Sudah di-push ke `origin/main` & auto-deploy live via webhook; migrasi sudah di-apply ke DB live.** Sisa pending maintainer: E2E manual.
 
 ## [Fase 6.1] - 2026-09-08
 ### Added
@@ -53,7 +54,7 @@
 - Di luar scope: filter by assignee, notifikasi, batasan single-assignee
 
 ### Status
-- Kode selesai di `main`, semua 6 task + QA APPROVED lewat subagent-driven development. Belum di-push/deploy. Sisa pending maintainer: E2E manual, push ke `origin/main`
+- Kode selesai di `main`, semua 6 task + QA APPROVED lewat subagent-driven development. **Sudah di-push ke `origin/main` & auto-deploy live via webhook; migrasi sudah di-apply ke DB live.** Sisa pending maintainer: E2E manual.
 
 ## [Fase 5] - 2026-09-08
 ### Added
@@ -72,13 +73,13 @@
 - Rename task dari context-menu kini auto-focus ke field title saat dialog terbuka
 
 ### Notes
-- Migrasi `archived_at` (kolom + partial index `tasks_active_by_list_idx`) — **belum di-apply ke DB live**, pending maintainer
+- Migrasi `archived_at` (kolom + partial index `tasks_active_by_list_idx`) — **sudah di-apply ke DB live** (urut sebelum migrasi assignee/labels/mcp_tokens)
 - Archive bersifat optimistic (rollback + toast bila gagal); Duplicate/Restore/Delete permanen tidak optimistic (tunggu konfirmasi server)
 - Tidak ada dependency baru — semua primitif menu (`MenuSubmenu`, context-menu) dibangun di atas `@base-ui/react` yang sudah ada
 - Long-press context-menu di mobile punya keterbatasan diketahui: dnd-kit `TouchSensor` menang atas long-press base-ui context-menu (didokumentasikan sebagai limitation, bukan bug) — makanya mobile pakai tombol dropdown terpisah, bukan long-press
 
 ### Status
-- Kode selesai di branch `feat/fase5-task-actions`, semua 9 task + final QA APPROVED lewat subagent-driven development. **Belum di-merge ke `main`, belum di-deploy.** Sisa pending maintainer: apply migrasi live, E2E manual, merge + deploy
+- Semua 9 task + final QA APPROVED lewat subagent-driven development. **Sudah di-merge ke `main` & auto-deploy live via webhook; migrasi sudah di-apply ke DB live.** Sisa pending maintainer: E2E manual.
 
 ## [Fase 4] - 2026-09-07
 ### Added
