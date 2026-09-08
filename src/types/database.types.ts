@@ -1,4 +1,4 @@
-// ponytail: hand-written types, ceiling = drift from real schema if migrations change without updating this file. lists.position and tasks.position are `double precision` (fractional index) as of migration 20260906010000_fractional_positions; still mapped to `number` here. As of migration 20260906020000_project_members_rls (Fase 3): adds the `project_members` table and the RLS helper functions `is_project_member` / `is_project_owner` / `shares_project_with` / `claim_pending_invites`. Upgrade: once Supabase CLI is linked to the project, replace with `supabase gen types typescript --project-id <ref> > src/types/database.types.ts`.
+// ponytail: hand-written types, ceiling = drift from real schema if migrations change without updating this file. lists.position and tasks.position are `double precision` (fractional index) as of migration 20260906010000_fractional_positions; still mapped to `number` here. As of migration 20260906020000_project_members_rls (Fase 3): adds the `project_members` table and the RLS helper functions `is_project_member` / `is_project_owner` / `shares_project_with` / `claim_pending_invites`. As of migration 20260908010000_task_assignees (Fase 6.1): adds the task_assignees join table. Upgrade: once Supabase CLI is linked to the project, replace with `supabase gen types typescript --project-id <ref> > src/types/database.types.ts`.
 
 export interface Database {
   public: {
@@ -145,6 +145,24 @@ export interface Database {
           created_by?: string
           updated_at?: string
           archived_at?: string | null
+        }
+        Relationships: []
+      }
+      task_assignees: {
+        Row: {
+          task_id: string
+          user_id: string
+          assigned_at: string
+        }
+        Insert: {
+          task_id: string
+          user_id: string
+          assigned_at?: string
+        }
+        Update: {
+          task_id?: string
+          user_id?: string
+          assigned_at?: string
         }
         Relationships: []
       }
