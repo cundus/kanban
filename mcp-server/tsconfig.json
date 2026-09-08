@@ -5,7 +5,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": "..",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -17,5 +17,5 @@
     "noFallthroughCasesInSwitch": true,
     "erasableSyntaxOnly": true
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "../src/types/database.types.ts"]
 }
