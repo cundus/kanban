@@ -2,6 +2,7 @@ import { useState } from "react"
 import { ArchiveIcon, RotateCcwIcon, TrashIcon } from "lucide-react"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -44,12 +45,13 @@ function ArchivedDialog({ projectId, open, onOpenChange }: ArchivedDialogProps) 
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>Archived tasks</DialogTitle>
         </DialogHeader>
-        <div className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
+        <DialogBody className="gap-2">
           {isLoading ? (
             <>
               <Skeleton className="h-12 w-full" />
@@ -95,8 +97,9 @@ function ArchivedDialog({ projectId, open, onOpenChange }: ArchivedDialogProps) 
               </div>
             ))
           )}
-        </div>
+        </DialogBody>
       </DialogContent>
+    </Dialog>
       <ConfirmDialog
         open={!!taskToDelete}
         onOpenChange={(v) => {
@@ -107,7 +110,7 @@ function ArchivedDialog({ projectId, open, onOpenChange }: ArchivedDialogProps) 
         confirmLabel="Delete"
         onConfirm={handleDeleteConfirm}
       />
-    </Dialog>
+    </>
   )
 }
 

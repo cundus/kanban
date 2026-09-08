@@ -5,8 +5,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 src/types/database.types.js
-.env
-.env.local
 *.log
 .vps-access.local.md
 deploy.ps1
+config.bat

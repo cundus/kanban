@@ -26,6 +26,7 @@ import {
 import { useTheme } from "@/lib/theme"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -180,7 +181,7 @@ export function ProjectListPage() {
           <DialogHeader>
             <DialogTitle>{editing ? "Rename project" : "New project"}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-4">
+          <DialogBody>
             <Input
               placeholder="Project name"
               value={name}
@@ -191,7 +192,7 @@ export function ProjectListPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button onClick={handleSave} disabled={!name.trim()}>
               Save

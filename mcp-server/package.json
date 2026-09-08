@@ -7,9 +7,9 @@
     "node": ">=22.6"
   },
   "scripts": {
-    "build": "tsc -b",
-    "start": "node dist/mcp-server/src/index.js",
-    "dev": "node --watch --experimental-strip-types src/index.ts"
+    "build": "node init && tsc -b",
+    "start": "node init && node dist/mcp-server/src/index.js",
+    "dev": "node init && node --watch --experimental-strip-types src/index.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
