@@ -120,7 +120,7 @@ Status: **kode selesai di branch `feat/fase5-task-actions`, belum di-merge ke `m
 ## Fase 6.1 — Assignee
 Plan: docs/superpowers/plans/2026-09-08-fase6-assignee-task-actions.md
 Spec: docs/superpowers/specs/2026-09-08-fase6-assignee-design.md
-Status: **kode selesai di `main`, diimplementasi lewat subagent-driven development (implementer → spec reviewer → code-quality reviewer per task), semua APPROVED.** Migrasi sudah di-apply ke DB live. Belum di-deploy (belum di-push ke `origin/main`).
+Status: **deployed to production** — kode di `main`, migrasi sudah di-apply ke DB live, sudah di-push & auto-deploy via webhook.
 
 - [x] Task 0: Migrasi `task_assignees` (composite PK, index `user_id`, RLS) + regen `database.types.ts` (commit `c42af46`, fix keamanan RLS pakai helper `is_project_member()` di commit `1b299a1`)
 - [x] Task 1: Komponen `Avatar` — inisial dengan warna hash deterministik, fallback foto profil (commit `4057351`)
@@ -136,7 +136,7 @@ Status: **kode selesai di `main`, diimplementasi lewat subagent-driven developme
 ## Fase 6.2 — Labels
 Plan: docs/superpowers/plans/2026-09-08-fase6-labels-implementation.md
 Spec: docs/superpowers/specs/2026-09-08-fase6-labels-design.md
-Status: **kode selesai di `main`, diimplementasi lewat subagent-driven development (implementer → reviewer per task), semua APPROVED.** Migrasi sudah di-apply ke DB live. Belum di-deploy (belum di-push ke `origin/main`).
+Status: **deployed to production** — kode di `main`, migrasi sudah di-apply ke DB live, sudah di-push & auto-deploy via webhook.
 
 - [x] Task 0: Migrasi `labels` + `task_labels` (composite PK, RLS via `is_project_member()`) + regen `database.types.ts` (commit `5e7d3d8`)
 - [x] Task 1: Komponen `LabelBadge` — pill warna dengan kontras teks berbasis luminance (commit `726f13d`)
@@ -149,6 +149,24 @@ Status: **kode selesai di `main`, diimplementasi lewat subagent-driven developme
   - [x] Lint (`npm run lint` → `oxlint`) — bersih, tanpa output
   - [ ] Manual E2E walkthrough (create/edit/delete label, toggle pada task, lihat pill di card & dialog) — **pending maintainer**: butuh browser + sesi login
   - [x] PROGRESS/CHANGELOG/MEMORY diperbarui
+
+## MCP Server — AI Agent Support
+Plan: docs/superpowers/plans/2026-09-08-mcp-server-implementation.md
+Status: **deployed to production** — https://mcp.cundus.my.id (HTTP 200). Kode di `main`, 9 task selesai lewat subagent-driven development, semua APPROVED.
+
+- [x] Task 0: Migrasi `mcp_tokens` + fungsi `is_project_member_for_user()` + regen `database.types.ts`
+- [x] Task 1: Scaffold paket Node standalone `mcp-server/` (bukan pnpm workspace member)
+- [x] Task 2: `db.ts` (Supabase service-role client) + `assertProjectMember` helper
+- [x] Task 3: Auth middleware bearer token (rate-limited, hash SHA-256)
+- [x] Task 4: Tools read-only — `list_projects`, `list_lists`, `list_labels`
+- [x] Task 5: Tools task CRUD — `list_tasks`, `create_task`, `update_task`, `delete_task`
+- [x] Task 6: Wiring Hono app (`GET /health`, `POST /mcp`) + keep-alive ping 3 hari
+- [x] Task 7: `ApiTokensDialog.tsx` di menu profil — generate token sekali-lihat
+- [x] Task 8: CI build-check job + CHANGELOG
+- [x] Deploy VPS: nginx vhost `mcp.cundus.my.id` + SSL certbot, container Docker di `/home/ubuntu/kanban/mcp-server/` (checkout git yang sama dengan web app), auto-deploy lewat webhook `/deploy/kanban` yang diperluas (`docker compose up --build -d` setelah `git pull`)
+  - [x] `tsc -b` clean (root + mcp-server), lint clean
+  - [x] `curl https://mcp.cundus.my.id/health` → 200
+  - [ ] Smoke-check manual ke-7 tools lewat MCP client asli — **pending maintainer**
 
 ## Deployment
 
@@ -163,6 +181,7 @@ Status: **kode selesai di `main`, diimplementasi lewat subagent-driven developme
 | Fase 2 deploy | `main` `98121b0` (lalu `59b767a` fix mobile DnD) auto-deployed live via webhook pada 2026-09-06 (bundle `index-C9SpamEW.js`). DB migration `20260906010000_fractional_positions.sql` **sudah di-apply** live pada 2026-09-06 — kolom `lists.position` & `tasks.position` terverifikasi `double precision`. |
 | Fase 3 deploy | `main` `41b196e` auto-deployed live via webhook pada 2026-09-07 (bundle `index-DVijB2h6.js`, HTTP 200). DB migration `20260906020000_project_members_rls.sql` **sudah di-apply** live pada 2026-09-07 — tabel `project_members` + 3 fungsi + backfill owner OK. |
 | Fase 4 deploy | `main` `77dfa71` auto-deployed live via webhook pada 2026-09-07 (bundle `index-D5xNrsS_.js`, HTTP 200). Tanpa migrasi DB / dep baru. |
+| MCP server | https://mcp.cundus.my.id (HTTP 200). Container Docker di `/home/ubuntu/kanban/mcp-server/` — checkout git yang sama dengan web app, di-build & di-restart oleh webhook `/deploy/kanban` yang sudah ada (command diperluas `&& cd mcp-server && sudo docker compose up --build -d`). Nginx vhost + SSL certbot terpisah untuk subdomain `mcp.cundus.my.id`, proxy ke `127.0.0.1:3100`. |
 
 Hosting stays on the VPS. Cloudflare Pages and other external build hosts were considered and declined.
 

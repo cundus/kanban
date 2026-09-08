@@ -16,7 +16,9 @@
 - Di luar scope: create/update/delete project/list/label via MCP, rotasi/expiry token, rate limit terdistribusi
 
 ### Status
-- Kode selesai di `main`, 9 task (Task 0-8). Sisa pending maintainer: setup proses Node di VPS (subdomain + reverse proxy + process manager), isi `SUPABASE_SERVICE_ROLE_KEY` di `.env`, smoke-check manual ke-7 tools, push ke `origin/main`
+- Kode selesai di `main`, 9 task (Task 0-8), sudah di-push ke `origin/main`.
+- **Deployed live** — https://mcp.cundus.my.id. Container Docker jalan di `/home/ubuntu/kanban/mcp-server/` (checkout git yang sama dengan web app), di-deploy otomatis lewat webhook `/deploy/kanban` yang sudah ada (command-nya diperluas untuk `docker compose up --build -d` setelah `git pull`). Nginx subdomain + SSL (certbot) aktif. `SUPABASE_SERVICE_ROLE_KEY` sudah diisi di `.env` VPS (gitignored).
+- Smoke-check: `curl https://mcp.cundus.my.id/health` → 200. Manual smoke-check ke-7 tools individual (lewat MCP client asli) masih pending maintainer.
 
 ## [Fase 6.2] - 2026-09-08
 ### Added
