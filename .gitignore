@@ -1,7 +1,10 @@
 .codegraph/
 .omo/
+.superpowers/
 node_modules/
 dist/
+*.tsbuildinfo
+src/types/database.types.js
 .env
 .env.local
 *.log
