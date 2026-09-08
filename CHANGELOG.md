@@ -1,5 +1,23 @@
 # Changelog
 
+## [MCP Server] - 2026-09-08
+### Added
+- Server MCP baru di `mcp-server/` (paket Node standalone, di luar workspace pnpm) — AI agent (Claude Code/OpenCode) bisa baca/tulis data kanban lewat HTTP + bearer token
+- Tabel `mcp_tokens` baru + fungsi `is_project_member_for_user()` (RLS helper untuk konteks service_role tanpa `auth.uid()`)
+- 7 tools MCP: `list_projects`, `list_lists`, `list_labels`, `list_tasks`, `create_task`, `update_task`, `delete_task`
+- Dialog "API Tokens" di menu profil — generate token sekali-lihat (SHA-256 hash disimpan, token mentah tidak pernah persist)
+- Keep-alive ping tiap 3 hari untuk cegah auto-pause Supabase free-tier
+
+### Notes
+- Dependency baru (hanya di `mcp-server/`, bukan root): `hono`, `@hono/node-server`, `@modelcontextprotocol/sdk`, `zod`
+- `mcp-server/` sengaja BUKAN pnpm workspace member — standalone package, import `database.types.ts` lewat relative path
+- Deviasi dari spec: `ApiTokensPage.tsx` di spec diimplementasi sebagai `ApiTokensDialog.tsx` (dialog, bukan halaman/route baru) — mengikuti konvensi codebase (Labels/Members/Import semua dialog, bukan route)
+- Live deploy proses Node `mcp-server` (pm2/systemd, subdomain reverse-proxy) di luar scope plan ini — CI hanya menjalankan build-check (`tsc`), bukan deploy pipeline baru
+- Di luar scope: create/update/delete project/list/label via MCP, rotasi/expiry token, rate limit terdistribusi
+
+### Status
+- Kode selesai di `main`, 9 task (Task 0-8). Sisa pending maintainer: setup proses Node di VPS (subdomain + reverse proxy + process manager), isi `SUPABASE_SERVICE_ROLE_KEY` di `.env`, smoke-check manual ke-7 tools, push ke `origin/main`
+
 ## [Fase 6.2] - 2026-09-08
 ### Added
 - Label pada task — tabel baru `labels` (per-project) + `task_labels` (composite PK `task_id`+`label_id`, RLS via `is_project_member()`)
