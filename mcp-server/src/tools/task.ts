@@ -2,6 +2,7 @@ import { z } from "zod"
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { supabase, assertProjectMember, McpError } from "../db.js"
 
+// ponytail: delete-then-insert isn't atomic; upgrade to a Postgres RPC/transaction if partial-write races become a real problem
 async function replaceAssignee(taskId: string, assigneeId: string | null | undefined): Promise<void> {
   if (assigneeId === undefined) return // field not provided, leave untouched
   const { error: delError } = await supabase.from("task_assignees").delete().eq("task_id", taskId)
@@ -13,6 +14,7 @@ async function replaceAssignee(taskId: string, assigneeId: string | null | undef
   if (insError) throw new Error(`Failed to set assignee: ${insError.message}`)
 }
 
+// ponytail: delete-then-insert isn't atomic; upgrade to a Postgres RPC/transaction if partial-write races become a real problem
 async function replaceLabels(taskId: string, labelIds: string[] | undefined): Promise<void> {
   if (labelIds === undefined) return // field not provided, leave untouched
   const { error: delError } = await supabase.from("task_labels").delete().eq("task_id", taskId)
@@ -21,6 +23,44 @@ async function replaceLabels(taskId: string, labelIds: string[] | undefined): Pr
   const rows = labelIds.map((labelId) => ({ task_id: taskId, label_id: labelId }))
   const { error: insError } = await supabase.from("task_labels").insert(rows)
   if (insError) throw new Error(`Failed to set labels: ${insError.message}`)
+}
+
+async function validateListInProject(listId: string, projectId: string): Promise<string | null> {
+  const { data, error } = await supabase.from("lists").select("project_id").eq("id", listId).single()
+  if (error) {
+    console.error("validateListInProject DB error:", error.message)
+    return "Error: failed to validate list_id"
+  }
+  if (data.project_id !== projectId) return "Error: list_id does not belong to this project"
+  return null
+}
+
+async function validateAssigneeInProject(assigneeId: string, projectId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("project_members")
+    .select("id")
+    .eq("project_id", projectId)
+    .eq("user_id", assigneeId)
+    .eq("status", "accepted")
+    .maybeSingle()
+  if (error) {
+    console.error("validateAssigneeInProject DB error:", error.message)
+    return "Error: failed to validate assignee_id"
+  }
+  if (!data) return "Error: assignee_id is not a member of this project"
+  return null
+}
+
+async function validateLabelsInProject(labelIds: string[], projectId: string): Promise<string | null> {
+  const { data, error } = await supabase.from("labels").select("id").eq("project_id", projectId).in("id", labelIds)
+  if (error) {
+    console.error("validateLabelsInProject DB error:", error.message)
+    return "Error: failed to validate label_ids"
+  }
+  const foundIds = new Set(data.map((label) => label.id))
+  const allFound = labelIds.every((id) => foundIds.has(id))
+  if (!allFound) return "Error: one or more label_ids do not belong to this project"
+  return null
 }
 
 export function registerTaskTools(server: McpServer, userId: string): void {
@@ -85,6 +125,19 @@ export function registerTaskTools(server: McpServer, userId: string): void {
         return { content: [{ type: "text", text: `Error: ${message}` }], isError: true }
       }
 
+      const listError = await validateListInProject(list_id, project_id)
+      if (listError) return { content: [{ type: "text", text: listError }], isError: true }
+
+      if (assignee_id) {
+        const assigneeError = await validateAssigneeInProject(assignee_id, project_id)
+        if (assigneeError) return { content: [{ type: "text", text: assigneeError }], isError: true }
+      }
+
+      if (label_ids && label_ids.length > 0) {
+        const labelError = await validateLabelsInProject(label_ids, project_id)
+        if (labelError) return { content: [{ type: "text", text: labelError }], isError: true }
+      }
+
       const { data: task, error } = await supabase
         .from("tasks")
         .insert({
@@ -110,7 +163,7 @@ export function registerTaskTools(server: McpServer, userId: string): void {
       } catch (err) {
         console.error(err)
         return {
-          content: [{ type: "text", text: "Task created but failed to set assignee/labels" }],
+          content: [{ type: "text", text: `Task created (id: ${task.id}) but failed to set assignee/labels` }],
           isError: true,
         }
       }
@@ -141,7 +194,11 @@ export function registerTaskTools(server: McpServer, userId: string): void {
         .eq("id", task_id)
         .single()
 
-      if (fetchError || !existingTask) {
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("update_task lookup DB error:", fetchError.message)
+        return { content: [{ type: "text", text: "Error: failed to lookup task" }], isError: true }
+      }
+      if (!existingTask) {
         return { content: [{ type: "text", text: "Error: task not found" }], isError: true }
       }
 
@@ -151,6 +208,21 @@ export function registerTaskTools(server: McpServer, userId: string): void {
         if (!(err instanceof McpError)) console.error(err)
         const message = err instanceof McpError ? err.message : "Unexpected error"
         return { content: [{ type: "text", text: `Error: ${message}` }], isError: true }
+      }
+
+      if (list_id !== undefined) {
+        const listError = await validateListInProject(list_id, existingTask.project_id)
+        if (listError) return { content: [{ type: "text", text: listError }], isError: true }
+      }
+
+      if (assignee_id) {
+        const assigneeError = await validateAssigneeInProject(assignee_id, existingTask.project_id)
+        if (assigneeError) return { content: [{ type: "text", text: assigneeError }], isError: true }
+      }
+
+      if (label_ids && label_ids.length > 0) {
+        const labelError = await validateLabelsInProject(label_ids, existingTask.project_id)
+        if (labelError) return { content: [{ type: "text", text: labelError }], isError: true }
       }
 
       const updates: {
@@ -202,7 +274,11 @@ export function registerTaskTools(server: McpServer, userId: string): void {
         .eq("id", task_id)
         .single()
 
-      if (fetchError || !existingTask) {
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("delete_task lookup DB error:", fetchError.message)
+        return { content: [{ type: "text", text: "Error: failed to lookup task" }], isError: true }
+      }
+      if (!existingTask) {
         return { content: [{ type: "text", text: "Error: task not found" }], isError: true }
       }
 
