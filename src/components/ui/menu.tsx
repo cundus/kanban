@@ -83,4 +83,33 @@ function MenuSeparator({
   )
 }
 
-export { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger }
+function MenuSubmenu({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
+  return <MenuPrimitive.SubmenuRoot data-slot="menu-submenu" {...props} />
+}
+
+function MenuSubmenuTrigger({
+  className,
+  ...props
+}: MenuPrimitive.SubmenuTrigger.Props) {
+  return (
+    <MenuPrimitive.SubmenuTrigger
+      data-slot="menu-submenu-trigger"
+      className={cn(
+        "flex h-8 cursor-default items-center gap-2 rounded-md px-2 outline-none select-none data-highlighted:bg-surface-3 data-highlighted:text-text-1 data-popup-open:bg-surface-3 data-popup-open:text-text-1 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuLabel,
+  MenuSeparator,
+  MenuSubmenu,
+  MenuSubmenuTrigger,
+  MenuTrigger,
+}
