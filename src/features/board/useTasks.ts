@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
 import type { Database } from "@/types/database.types"
-import { positionAtEnd } from "./reorderUtils"
+import { positionAtEnd, positionBetween } from "./reorderUtils"
+import { archivedTasksKey } from "./useArchivedTasks"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -18,6 +19,7 @@ export function useTasks(projectId: string) {
         .from("tasks")
         .select("*")
         .eq("project_id", projectId)
+        .is("archived_at", null)
         .order("position", { ascending: true })
       if (error) throw error
       return data as Task[]
@@ -95,6 +97,45 @@ export function useDeleteTask(projectId: string) {
   })
 }
 
+export function useDuplicateTask(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (task: Task) => {
+      const siblingTasks = queryClient.getQueryData<Task[]>(tasksKey(projectId)) ?? []
+      const sameListTasks = siblingTasks
+        .filter((t) => t.list_id === task.list_id)
+        .sort((a, b) => a.position - b.position)
+      const currentIndex = sameListTasks.findIndex((t) => t.id === task.id)
+      const nextSibling = sameListTasks[currentIndex + 1]
+      const newPosition = positionBetween(task.position, nextSibling?.position)
+
+      const { data: userData } = await supabase.auth.getUser()
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert({
+          list_id: task.list_id,
+          project_id: task.project_id,
+          title: task.title + " (copy)",
+          description_md: task.description_md,
+          due_date: task.due_date,
+          position: newPosition,
+          created_by: userData.user!.id,
+          archived_at: null,
+        })
+        .select()
+        .single()
+      if (error) throw error
+      return data as Task
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tasksKey(projectId) })
+    },
+    onError: () => {
+      toast.error("Gagal menduplikasi task.")
+    },
+  })
+}
+
 /**
  * Satu mutation untuk reorder task dalam list DAN pindah antar list.
  * Optimistic: patch cache di `onMutate`, rollback + toast di `onError`.
@@ -132,6 +173,58 @@ export function useMoveTask(projectId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: key })
+    },
+  })
+}
+
+export function useArchiveTask(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ archived_at: new Date().toISOString() })
+        .eq("id", taskId)
+      if (error) throw error
+    },
+    onMutate: async (taskId: string) => {
+      await queryClient.cancelQueries({ queryKey: tasksKey(projectId) })
+      const previousTasks = queryClient.getQueryData<Task[]>(tasksKey(projectId))
+      queryClient.setQueryData<Task[]>(tasksKey(projectId), (old) =>
+        (old ?? []).filter((t) => t.id !== taskId)
+      )
+      return { previousTasks }
+    },
+    onError: (_err, _taskId, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(tasksKey(projectId), context.previousTasks)
+      }
+      toast.error("Gagal mengarsipkan task. Perubahan dibatalkan.")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: tasksKey(projectId) })
+      queryClient.invalidateQueries({ queryKey: archivedTasksKey(projectId) })
+    },
+  })
+}
+
+export function useRestoreTask(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ archived_at: null })
+        .eq("id", taskId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tasksKey(projectId) })
+      queryClient.invalidateQueries({ queryKey: archivedTasksKey(projectId) })
+      toast.success("Task dipulihkan.")
+    },
+    onError: () => {
+      toast.error("Gagal memulihkan task.")
     },
   })
 }
