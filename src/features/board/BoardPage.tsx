@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 import {
@@ -13,6 +13,7 @@ import {
   useSensors,
 } from "@dnd-kit/core"
 import type {
+  CollisionDetection,
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
@@ -125,6 +126,27 @@ export function BoardPage() {
   const listIds = useMemo(
     () => [...(lists ?? [])].sort((a, b) => a.position - b.position).map((l) => l.id),
     [lists]
+  )
+
+  // While a list is being dragged, restrict collisions to the list columns
+  // themselves. Otherwise closestCorners also weighs each column's inner task
+  // drop-zone and every task card — which sit closer to the pointer over a
+  // column body — so `over` resolves to a `list-dropzone-*`/task id and the
+  // reorder in onDragEnd bails out (list only moves near a column's edge).
+  const collisionDetection = useCallback<CollisionDetection>(
+    (args) => {
+      if (args.active.data.current?.type === "list") {
+        const listIdSet = new Set(listIds)
+        return closestCorners({
+          ...args,
+          droppableContainers: args.droppableContainers.filter((c) =>
+            listIdSet.has(String(c.id))
+          ),
+        })
+      }
+      return closestCorners(args)
+    },
+    [listIds]
   )
 
   function resolveContainer(taskArr: Task[], id: string): string | null {
@@ -245,10 +267,13 @@ export function BoardPage() {
 
     if (type === "list") {
       setDndTasks(null)
-      if (activeId === overId) return
+      // `over` may be a column's task drop-zone or a task card rather than the
+      // bare list id — map it back to the owning list before reordering.
+      const overListId = resolveContainer(allTasks ?? [], overId)
+      if (!overListId || activeId === overListId) return
       const sorted = [...(lists ?? [])].sort((a, b) => a.position - b.position)
       const activeIndex = sorted.findIndex((l) => l.id === activeId)
-      const overIndex = sorted.findIndex((l) => l.id === overId)
+      const overIndex = sorted.findIndex((l) => l.id === overListId)
       if (activeIndex === -1 || overIndex === -1) return
       const targetIndex = overIndex + (activeIndex < overIndex ? 1 : 0)
       const newPosition = positionForIndex(sorted, targetIndex, activeId)
@@ -365,7 +390,7 @@ export function BoardPage() {
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetection}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
