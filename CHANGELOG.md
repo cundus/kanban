@@ -18,6 +18,24 @@
 - Kode di branch `feat/wysiwyg-markdown-editor`. `tsc` + `oxlint` + `vite build` hijau; dev server serve 200.
 - **Pending QA manual**: interaksi mengetik di editor (transform inline, paste, undo/redo), round-trip simpan/buka ulang deskripsi lama, tampilan dark mode.
 
+## [Import Trello] - 2026-09-08
+### Added
+- Import sekarang menerima **file JSON export board Trello**, bukan hanya format `personal-kanban-export` — dialog Import mendeteksi bentuknya otomatis
+- `src/features/import-export/trelloAdapter.ts` — `isTrelloExport()` + `adaptTrelloExport()` (Trello board JSON → `ExportDocV1`, lalu tetap lewat `validateImport` yang ada)
+- Checklist Trello di-fold jadi checkbox Markdown (`- [ ]` / `- [x]`) di deskripsi task; `due` → `due_date`
+- Self-check `trelloAdapter.selfcheck.ts` — 23 PASS (`pnpm dlx tsx src/features/import-export/trelloAdapter.selfcheck.ts`)
+- Petunjuk sumber file Trello di dalam dialog Import (Board menu → Print, export, and share → Export as JSON)
+
+### Notes
+- Tidak ada dependency baru, tidak ada migrasi DB, `useImportProject`/`database.types.ts` tidak berubah
+- File dengan key `format` selalu lewat jalur validasi native — adapter Trello hanya jalan untuk objek dengan array `cards` + `lists` tanpa `format`
+- **Diabaikan total** dari export Trello: `labels`, `actions` (komentar), `members`, `customFields`, `attachments`, `pluginData` — keputusan scope eksplisit
+- Semua batas import lama tetap berlaku (file ≤ 2 MB, ≤ 100 list, ≤ 2.000 task, deskripsi task ≤ 20.000 char) karena hasil adapter tetap divalidasi `validateImport`
+- Card/list dengan `closed: true` dibuang; urutan mengikuti `pos` Trello
+
+### Status
+- Kode di `main`, verifikasi hijau (`tsc -b`, `pnpm lint`, `pnpm build`, `importValidation.selfcheck.ts` 17/17 regression, `docs/export-trello.json` asli → 3 list / 3 task valid). **Belum deploy.** Pending maintainer: E2E manual upload file Trello lewat UI.
+
 ## [MCP Server] - 2026-09-08
 ### Added
 - Server MCP baru di `mcp-server/` (paket Node standalone, di luar workspace pnpm) — AI agent (Claude Code/OpenCode) bisa baca/tulis data kanban lewat HTTP + bearer token

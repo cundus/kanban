@@ -4,6 +4,7 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -30,14 +31,14 @@ function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm" showCloseButton={false}>
+      <DialogContent className="sm:max-w-sm" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? (
             <DialogDescription>{description}</DialogDescription>
           ) : null}
         </DialogHeader>
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           {/* Focus lands on Cancel so Enter never fires the destructive path. */}
           <DialogClose render={<Button variant="ghost" autoFocus />}>
             {cancelLabel}
@@ -51,7 +52,7 @@ function ConfirmDialog({
           >
             {confirmLabel}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
 const dialogContentVariants = cva(
-  "elev-overlay fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border border-line bg-surface-2 p-4 text-ui text-text-2 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+  // Fixed, viewport-capped flex column: DialogHeader / DialogFooter stay put while
+  // DialogBody scrolls. `max-h` + `overflow-hidden` keep the panel on-screen and
+  // clip the scrolling body to the rounded corners. DESIGN.md 5.4.
+  "elev-overlay fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-line bg-surface-2 text-ui text-text-2 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
   {
     variants: {
       size: {
@@ -79,13 +82,12 @@ function DialogContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-2 right-2"
+                className="absolute top-3 right-3 z-10"
                 size="icon-sm"
               />
             }
           >
-            <XIcon
-            />
+            <XIcon />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
@@ -94,11 +96,36 @@ function DialogContent({
   )
 }
 
+/**
+ * Fixed top region. `pr-12` keeps the title clear of the absolute close button.
+ * The bottom border separates it from a scrolling DialogBody.
+ */
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn(
+        "flex shrink-0 flex-col gap-1.5 border-b border-line-subtle px-5 pt-5 pb-4 pr-12",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * The one scrollable region of a dialog. `min-h-0` lets it shrink inside the
+ * flex column so `overflow-y-auto` actually engages instead of pushing the
+ * footer off-screen.
+ */
+function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-body"
+      className={cn(
+        "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-5 py-4",
+        className
+      )}
       {...props}
     />
   )
@@ -116,7 +143,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t border-line-subtle bg-surface-3 p-4 sm:flex-row sm:justify-end",
+        "flex shrink-0 flex-col-reverse gap-2 border-t border-line-subtle bg-surface-3 px-5 py-4 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -162,6 +189,7 @@ function DialogDescription({
 
 export {
   Dialog,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,

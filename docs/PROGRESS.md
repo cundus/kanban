@@ -168,6 +168,19 @@ Status: **deployed to production** — https://mcp.cundus.my.id (HTTP 200). Kode
   - [x] `curl https://mcp.cundus.my.id/health` → 200
   - [ ] Smoke-check manual ke-7 tools lewat MCP client asli — **pending maintainer**
 
+## Import — Trello board JSON
+Status: **kode di `main` (belum deploy)**. Tanpa migrasi DB, tanpa dependency baru, tanpa perubahan `useImportProject`/`database.types.ts`.
+
+- [x] `trelloAdapter.ts` — `isTrelloExport()` (deteksi: objek dengan array `cards` + `lists`, tanpa key `format` → file native tetap menang) + `adaptTrelloExport()` (Trello board JSON → `ExportDocV1`, lalu tetap lewat `validateImport` yang ada)
+  - lists: buang `closed`, urut `pos`; cards: buang `closed` + list tak dikenal, group per `idList`, urut `pos`
+  - `name`→`title`, `desc`→`description_md`, `due` (ISO) → `due_date` (`slice(0,10)`, divalidasi `YYYY-MM-DD`)
+  - `checklists` (match `idCard`, urut `pos`) di-fold ke `description_md`: `## <nama>` + `- [ ]`/`- [x]` per item
+  - diabaikan total: `labels`, `actions`, `members`, `customFields`, `attachments`, `pluginData`
+- [x] `ImportDialog.tsx` — setelah `JSON.parse`, kalau `isTrelloExport` → adapter dulu, hasil `doc` baru ke `validateImport`. `handleImport`/`useImportProject` tidak berubah. Copy dialog ditambah petunjuk sumber Trello.
+- [x] `trelloAdapter.selfcheck.ts` — 23 PASS (`pnpm dlx tsx src/features/import-export/trelloAdapter.selfcheck.ts`), fixture inline
+- [x] Verifikasi: `tsc -b` exit 0, `pnpm lint` clean, `pnpm build` exit 0, `importValidation.selfcheck.ts` 17/17 PASS (regression), file Trello asli `docs/export-trello.json` → 3 list / 3 task, `validateImport.ok`
+- [ ] E2E manual (upload file Trello lewat UI, cek project baru + checklist jadi Markdown) — **pending maintainer**
+
 ## Deployment
 
 | | |

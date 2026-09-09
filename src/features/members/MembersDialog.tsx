@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip } from "@/components/ui/tooltip"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -73,12 +74,14 @@ export function MembersDialog({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Members — {projectName}</DialogTitle>
         </DialogHeader>
 
+        <DialogBody>
         {isOwner && (
           <div className="flex gap-2">
             <Input
@@ -88,6 +91,7 @@ export function MembersDialog({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+              className="min-w-0 flex-1"
             />
             <Button
               onClick={handleInvite}
@@ -121,6 +125,7 @@ export function MembersDialog({
             />
           ))}
         </ul>
+        </DialogBody>
 
         {isMember && (
           <DialogFooter>
@@ -133,31 +138,32 @@ export function MembersDialog({
             </Button>
           </DialogFooter>
         )}
-
-        <ConfirmDialog
-          open={pendingRemoval !== null}
-          onOpenChange={(o) => !o && setPendingRemoval(null)}
-          title={`Remove ${
-            pendingRemoval?.profile?.full_name ?? pendingRemoval?.invited_email
-          }?`}
-          description="They lose access to this project immediately. You can invite them again later."
-          confirmLabel="Remove"
-          onConfirm={() => {
-            if (pendingRemoval) removeMember.mutate(pendingRemoval.id)
-            setPendingRemoval(null)
-          }}
-        />
-
-        <ConfirmDialog
-          open={leaveOpen}
-          onOpenChange={setLeaveOpen}
-          title="Leave this project?"
-          description="You lose access to its lists and tasks until someone invites you back."
-          confirmLabel="Leave"
-          onConfirm={handleLeave}
-        />
       </DialogContent>
     </Dialog>
+
+      <ConfirmDialog
+        open={pendingRemoval !== null}
+        onOpenChange={(o) => !o && setPendingRemoval(null)}
+        title={`Remove ${
+          pendingRemoval?.profile?.full_name ?? pendingRemoval?.invited_email
+        }?`}
+        description="They lose access to this project immediately. You can invite them again later."
+        confirmLabel="Remove"
+        onConfirm={() => {
+          if (pendingRemoval) removeMember.mutate(pendingRemoval.id)
+          setPendingRemoval(null)
+        }}
+      />
+
+      <ConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        title="Leave this project?"
+        description="You lose access to its lists and tasks until someone invites you back."
+        confirmLabel="Leave"
+        onConfirm={handleLeave}
+      />
+    </>
   )
 }
 
