@@ -1,4 +1,4 @@
-// ponytail: hand-written types, ceiling = drift from real schema if migrations change without updating this file. lists.position and tasks.position are `double precision` (fractional index) as of migration 20260906010000_fractional_positions; still mapped to `number` here. As of migration 20260906020000_project_members_rls (Fase 3): adds the `project_members` table and the RLS helper functions `is_project_member` / `is_project_owner` / `shares_project_with` / `claim_pending_invites`. As of migration 20260908010000_task_assignees (Fase 6.1): adds the task_assignees join table. As of migration 20260908020000_labels (Fase 6.2): adds labels and task_labels tables. As of migration 20260908030000_mcp_tokens (MCP Server): adds the mcp_tokens table and the is_project_member_for_user(p_user_id, p_project_id) RLS helper function. Upgrade: once Supabase CLI is linked to the project, replace with `supabase gen types typescript --project-id <ref> > src/types/database.types.ts`.
+// ponytail: hand-written types, ceiling = drift from real schema if migrations change without updating this file. lists.position and tasks.position are `double precision` (fractional index) as of migration 20260906010000_fractional_positions; still mapped to `number` here. As of migration 20260906020000_project_members_rls (Fase 3): adds the `project_members` table and the RLS helper functions `is_project_member` / `is_project_owner` / `shares_project_with` / `claim_pending_invites`. As of migration 20260908010000_task_assignees (Fase 6.1): adds the task_assignees join table. As of migration 20260908020000_labels (Fase 6.2): adds labels and task_labels tables. As of migration 20260908030000_mcp_tokens (MCP Server): adds the mcp_tokens table and the is_project_member_for_user(p_user_id, p_project_id) RLS helper function. As of migration 20260909000000_task_images: adds the task_images table and the private `task-images` storage bucket. Upgrade: once Supabase CLI is linked to the project, replace with `supabase gen types typescript --project-id <ref> > src/types/database.types.ts`.
 
 export interface Database {
   public: {
@@ -203,6 +203,45 @@ export interface Database {
         Update: {
           task_id?: string
           label_id?: string
+        }
+        Relationships: []
+      }
+      task_images: {
+        Row: {
+          id: string
+          task_id: string
+          project_id: string
+          storage_path: string
+          mime_type: string
+          size_bytes: number
+          width: number | null
+          height: number | null
+          created_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          project_id: string
+          storage_path: string
+          mime_type: string
+          size_bytes?: number
+          width?: number | null
+          height?: number | null
+          created_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          project_id?: string
+          storage_path?: string
+          mime_type?: string
+          size_bytes?: number
+          width?: number | null
+          height?: number | null
+          created_by?: string
+          created_at?: string
         }
         Relationships: []
       }

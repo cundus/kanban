@@ -1,5 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { ImageIcon } from "lucide-react"
 import { cn } from "cn"
 import type { Database } from "@/types/database.types"
 import { Avatar } from "@/components/ui/avatar"
@@ -8,6 +9,7 @@ import { useTaskAssignees } from "./useTaskAssignees"
 import type { AssigneeProfile } from "./useTaskAssignees"
 import { LabelBadge } from "@/components/ui/label-badge"
 import { useTaskLabels } from "./useLabels"
+import { useTaskImages } from "./useTaskImages"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -35,6 +37,9 @@ export function TaskCard({
   const { data: labelsByTask } = useTaskLabels(projectId)
   const labels = labelsByTask?.[task.id] ?? []
 
+  const { data: imagesByTask } = useTaskImages(projectId)
+  const imageCount = imagesByTask?.[task.id]?.length ?? 0
+
   // Transform (not Translate) so neighbours animate fully when a gap opens.
   // opacity 0 hides the source while DragOverlay follows the cursor; dnd-kit
   // keeps this node mounted so the slot stays reserved.
@@ -59,6 +64,7 @@ export function TaskCard({
           </div>
         )}
         {assignees.length > 0 && <AvatarStack assignees={assignees} />}
+        {imageCount > 0 && <ImageCount count={imageCount} />}
       </article>
     )
   }
@@ -85,6 +91,7 @@ export function TaskCard({
           </div>
         )}
         {assignees.length > 0 && <AvatarStack assignees={assignees} />}
+        {imageCount > 0 && <ImageCount count={imageCount} />}
         <div
           className="absolute right-1 top-1 opacity-0 transition-opacity group-hover/card:opacity-100 sm:opacity-0 max-sm:opacity-100"
           onClick={(e) => e.stopPropagation()}
@@ -93,6 +100,15 @@ export function TaskCard({
         </div>
       </article>
     </TaskActionsMenu>
+  )
+}
+
+function ImageCount({ count }: { count: number }) {
+  return (
+    <div className="mt-1.5 flex items-center gap-1 text-micro text-text-4">
+      <ImageIcon className="size-3" />
+      {count}
+    </div>
   )
 }
 

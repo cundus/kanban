@@ -20,6 +20,8 @@ import { useTaskAssignees, useToggleAssignee } from "./useTaskAssignees"
 import { LabelBadge } from "@/components/ui/label-badge"
 import { useLabels, useTaskLabels, useToggleTaskLabel } from "./useLabels"
 import { LabelsDialog } from "./LabelsDialog"
+import { useTaskImages } from "./useTaskImages"
+import { TaskImageUploader } from "./TaskImageUploader"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -53,6 +55,7 @@ export function TaskDialog({
   const { data: allLabels } = useLabels(projectId)
   const { data: labelsByTask } = useTaskLabels(projectId)
   const toggleLabel = useToggleTaskLabel(task?.id ?? "", projectId)
+  const { data: imagesByTask } = useTaskImages(projectId)
 
   // Reset on task identity change only — not full object — so an in-flight
   // autosave that updates the cached task object doesn't reset these fields
@@ -186,6 +189,11 @@ export function TaskDialog({
                   Save description
                 </Button>
               )}
+              <TaskImageUploader
+                taskId={currentTask.id}
+                projectId={projectId}
+                images={imagesByTask?.[currentTask.id] ?? []}
+              />
             </div>
             <div className="flex flex-col gap-4 md:order-2">
               <div className="flex flex-col gap-2">

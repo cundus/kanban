@@ -1,5 +1,18 @@
 # Changelog
 
+## [Image di Task Card] - 2026-09-09
+### Added
+- Uploader gambar di `TaskDialog`, tepat di bawah composer description (`TaskImageUploader`). Sumber gambar: klik (file picker), drag-drop, atau **paste clipboard di mana saja selama dialog terbuka** — listener `paste` fase-capture di `document` menangkap file gambar sebelum editor markdown memprosesnya; paste teks/URL tidak tersentuh. Satu task boleh punya banyak gambar; tiap thumbnail bisa dibuka full-size (signed URL, tab baru) dan dihapus.
+- `src/lib/fileProcessing.ts` — util pemrosesan file reusable: `compressImage()` (wrapper `compressorjs` — resize ke maks 1920px + PNG >1 MB → JPEG, "mendekati lossless" di kualitas default; GIF dilewati), `imagesFromClipboard()`, `fileExtension()`, `formatBytes()`, `imageDimensions()`, guard `isAcceptedImage()`.
+- `src/features/board/useTaskImages.ts` — `useTaskImages` (batch per-project, dedup lewat queryKey seperti `useTaskLabels`), `useSignedImageUrls` (cache < TTL bucket), `useUploadTaskImages` (kompres → upload storage → insert baris, rollback object bila insert gagal), `useDeleteTaskImage`.
+- Indikator jumlah gambar di `TaskCard` (ikon + angka), pola sama dengan label/assignee.
+- Migrasi `20260909000000_task_images.sql` — tabel `public.task_images` (metadata + RLS `is_project_member`) dan bucket storage **privat** `task-images` (limit 5 MB; PNG/JPEG/WebP/GIF) dengan policy `storage.objects` di-key pada folder pertama path (`<project_id>/<task_id>/<uuid>.<ext>`).
+
+### Notes
+- Dependency baru: `compressorjs` (^1.3.0), ship type sendiri.
+- **Pending**: jalankan `pnpm migrate:up` untuk apply migrasi ke DB live. Kalau pembuatan policy di `storage.objects` ditolak koneksi pooler, jalankan bagian storage migrasi lewat Supabase dashboard SQL editor.
+- Export/import (`exportFormat.ts`) belum menyertakan gambar — di luar scope kartu ini.
+
 ## [Fix drag list "tertinggal"] - 2026-09-09
 ### Fixed
 - Drag-reorder kolom list tidak lagi "tertinggal" satu frame di slot lama saat dilepas. `BoardPage` sekarang menahan `dndLists` (mirror urutan kolom hasil drop) dari `onDragEnd` sampai `reorderList` `onSettled`, dan me-render dari `effectiveLists` yang selalu position-sorted — pola yang sama dengan perbaikan flicker card task sebelumnya. Akar masalah: `useReorderList.onMutate` `await cancelQueries` dulu sebelum patch cache, jadi ada jeda di mana `DragOverlay` sudah hilang tapi urutan `lists` belum ter-patch.
