@@ -100,6 +100,7 @@ export function BoardPage() {
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [activeList, setActiveList] = useState<List | null>(null)
   const [dndTasks, setDndTasks] = useState<Task[] | null>(null)
+  const [dndLists, setDndLists] = useState<List[] | null>(null)
 
   // Mouse: start drag after a small move. Touch: require a short press-and-hold
   // before dragging so that plain swipes still scroll the board/list normally.
@@ -111,6 +112,13 @@ export function BoardPage() {
   )
 
   const effectiveTasks = dndTasks ?? allTasks ?? []
+  // Mirror of the list order held from drop until useReorderList's optimistic
+  // cache patch lands — see onDragEnd. Always render position-sorted so DOM
+  // order matches once drag transforms clear.
+  const effectiveLists = useMemo(
+    () => [...(dndLists ?? lists ?? [])].sort((a, b) => a.position - b.position),
+    [dndLists, lists]
+  )
 
   const tasksByList = useMemo(() => {
     const map = new Map<string, Task[]>()
@@ -123,10 +131,7 @@ export function BoardPage() {
     return map
   }, [effectiveTasks])
 
-  const listIds = useMemo(
-    () => [...(lists ?? [])].sort((a, b) => a.position - b.position).map((l) => l.id),
-    [lists]
-  )
+  const listIds = useMemo(() => effectiveLists.map((l) => l.id), [effectiveLists])
 
   // While a list is being dragged, restrict collisions to the list columns
   // themselves. Otherwise closestCorners also weighs each column's inner task
@@ -249,6 +254,7 @@ export function BoardPage() {
     setActiveTask(null)
     setActiveList(null)
     setDndTasks(null)
+    setDndLists(null)
   }
 
   function onDragEnd(event: DragEndEvent) {
@@ -259,6 +265,7 @@ export function BoardPage() {
 
     if (!over) {
       setDndTasks(null)
+      setDndLists(null)
       return
     }
 
@@ -270,14 +277,32 @@ export function BoardPage() {
       // `over` may be a column's task drop-zone or a task card rather than the
       // bare list id — map it back to the owning list before reordering.
       const overListId = resolveContainer(allTasks ?? [], overId)
-      if (!overListId || activeId === overListId) return
+      if (!overListId || activeId === overListId) {
+        setDndLists(null)
+        return
+      }
       const sorted = [...(lists ?? [])].sort((a, b) => a.position - b.position)
       const activeIndex = sorted.findIndex((l) => l.id === activeId)
       const overIndex = sorted.findIndex((l) => l.id === overListId)
-      if (activeIndex === -1 || overIndex === -1) return
+      if (activeIndex === -1 || overIndex === -1) {
+        setDndLists(null)
+        return
+      }
       const targetIndex = overIndex + (activeIndex < overIndex ? 1 : 0)
       const newPosition = positionForIndex(sorted, targetIndex, activeId)
-      reorderList.mutate({ listId: activeId, newPosition })
+      // Hold the reordered columns in a mirror until the optimistic cache patch
+      // lands. useReorderList awaits cancelQueries inside onMutate, so without
+      // this the dropped column paints one frame at its old slot before the
+      // patched `lists` order arrives — the "tertinggal" flash.
+      setDndLists(
+        sorted.map((l) =>
+          l.id === activeId ? { ...l, position: newPosition } : l
+        )
+      )
+      reorderList.mutate(
+        { listId: activeId, newPosition },
+        { onSettled: () => setDndLists(null) }
+      )
       return
     }
 
@@ -420,7 +445,7 @@ export function BoardPage() {
             ))
           ) : lists?.length ? (
             <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
-              {lists.map((list) => (
+              {effectiveLists.map((list) => (
                 <ListColumn
                   key={list.id}
                   list={list}

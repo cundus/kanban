@@ -1,5 +1,9 @@
 # Changelog
 
+## [Fix drag list "tertinggal"] - 2026-09-09
+### Fixed
+- Drag-reorder kolom list tidak lagi "tertinggal" satu frame di slot lama saat dilepas. `BoardPage` sekarang menahan `dndLists` (mirror urutan kolom hasil drop) dari `onDragEnd` sampai `reorderList` `onSettled`, dan me-render dari `effectiveLists` yang selalu position-sorted — pola yang sama dengan perbaikan flicker card task sebelumnya. Akar masalah: `useReorderList.onMutate` `await cancelQueries` dulu sebelum patch cache, jadi ada jeda di mana `DragOverlay` sudah hilang tapi urutan `lists` belum ter-patch.
+
 ## [WYSIWYG Markdown Editor] - 2026-09-09
 ### Changed
 - Editor deskripsi task di `TaskDialog` diganti dari textarea write/preview/split menjadi **WYSIWYG** berbasis Milkdown (ProseMirror). `# `, `- `, `> `, `**bold**`, dst. berubah inline saat diketik; konten diserialisasi ke CommonMark + GFM untuk disimpan di `description_md`.
