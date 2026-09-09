@@ -1,0 +1,120 @@
+/* WYSIWYG markdown editor (Milkdown). Scoped to `.milkdown-wrapper`; all colours
+   come from the DESIGN.md token ramps so light/dark follow the app theme. */
+
+.milkdown-wrapper .milkdown {
+  overflow-wrap: anywhere;
+}
+
+.milkdown-prose {
+  padding: 0.75rem;
+  outline: none;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.milkdown-prose > :first-child {
+  margin-top: 0;
+}
+.milkdown-prose > :last-child {
+  margin-bottom: 0;
+}
+
+.milkdown-prose p {
+  margin: 0.5rem 0;
+}
+
+.milkdown-prose h1,
+.milkdown-prose h2,
+.milkdown-prose h3,
+.milkdown-prose h4 {
+  color: var(--text-1);
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.1rem 0 0.5rem;
+}
+.milkdown-prose h1 { font-size: 1.35rem; }
+.milkdown-prose h2 { font-size: 1.15rem; }
+.milkdown-prose h3 { font-size: 1rem; }
+.milkdown-prose h4 { font-size: 0.9rem; }
+
+.milkdown-prose a {
+  color: var(--accent-solid);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.milkdown-prose ul,
+.milkdown-prose ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+.milkdown-prose ul { list-style: disc; }
+.milkdown-prose ol { list-style: decimal; }
+.milkdown-prose li { margin: 0.2rem 0; }
+.milkdown-prose li > p { margin: 0; }
+
+.milkdown-prose blockquote {
+  margin: 0.6rem 0;
+  padding-left: 0.9rem;
+  border-left: 3px solid var(--line-strong);
+  color: var(--text-3);
+}
+
+.milkdown-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: var(--surface-3);
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+}
+
+.milkdown-prose pre {
+  margin: 0.6rem 0;
+  padding: 0.75rem 0.9rem;
+  background: var(--surface-3);
+  border: 1px solid var(--line-subtle);
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.milkdown-prose pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.8125rem;
+}
+
+.milkdown-prose hr {
+  margin: 1rem 0;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+.milkdown-prose img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+.milkdown-prose table {
+  border-collapse: collapse;
+  margin: 0.6rem 0;
+  width: 100%;
+}
+.milkdown-prose th,
+.milkdown-prose td {
+  border: 1px solid var(--line);
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+}
+.milkdown-prose th {
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+/* ProseMirror gap/selection niceties */
+.milkdown-prose .ProseMirror-selectednode {
+  outline: 2px solid var(--accent-line);
+}
+.milkdown-prose ::selection {
+  background: var(--accent-soft);
+}

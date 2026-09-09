@@ -57,7 +57,9 @@ Aplikasi manajemen proyek pribadi bergaya Trello (papan Kanban: list/kolom + kar
 
 ### 4.6 Markdown Editor
 - Field deskripsi task mendukung Markdown.
-- Mode: **tulis (raw markdown) ↔ preview** (toggle atau split view), dirender pakai library ringan (`marked` atau `markdown-it`), bukan WYSIWYG editor berat (hindari TipTap/ProseMirror agar bundle tetap kecil).
+- **Editor WYSIWYG** (Milkdown / ProseMirror): teks diedit sebagai rich content — `# `, `- `, `> `, `**bold**` dll. langsung berubah inline saat diketik — lalu diserialisasi ke CommonMark + GFM untuk disimpan di `description_md`.
+- Bundle ProseMirror di-*code-split* (lazy `import()`, dimuat hanya saat task dialog dibuka) supaya load awal board tetap ringan. `marked`/`dompurify` tidak lagi dipakai — WYSIWYG tidak pernah me-render raw HTML string ke DOM, jadi tidak butuh sanitasi terpisah.
+- Catatan sejarah: PRD awal mensyaratkan mode tulis/preview berbasis `marked` dan eksplisit menghindari WYSIWYG demi bundle kecil; ini di-*supersede* oleh kartu Kanban "Markdown Editor (WYSIWYG)".
 
 ## 5. Di Luar Lingkup (Out of Scope — v1)
 

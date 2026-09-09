@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogHeader,
 } from "@/components/ui/dialog"
-import { MarkdownEditor } from "./MarkdownEditor"
 import { TaskActionsMenu } from "./TaskActionsMenu"
 import { formatRelativeTime } from "@/lib/formatRelativeTime"
 import type { Database } from "@/types/database.types"
@@ -24,6 +23,9 @@ import { LabelsDialog } from "./LabelsDialog"
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
 const TITLE_INPUT_ID = "task-dialog-title"
+
+// Lazy so the ProseMirror/Milkdown bundle loads only when a task is opened.
+const MarkdownEditor = lazy(() => import("./MarkdownEditor"))
 
 export function TaskDialog({
   task,
@@ -161,13 +163,23 @@ export function TaskDialog({
           <div className="grid gap-5 md:grid-cols-[1fr_16rem]">
             <div className="flex flex-col gap-2 md:order-1">
               <Label>Description</Label>
-              <MarkdownEditor
-                value={descriptionMd}
-                onChange={(v) => {
-                  setDescriptionMd(v)
-                  setDescriptionDirty(true)
-                }}
-              />
+              {/* Uncontrolled editor: seed from the canonical task value and
+                  remount per task via key. Local `descriptionMd` only tracks
+                  edits for the Save button. */}
+              <Suspense
+                fallback={
+                  <div className="h-40 animate-pulse rounded-md border border-line bg-surface-1" />
+                }
+              >
+                <MarkdownEditor
+                  key={currentTask.id}
+                  value={currentTask.description_md ?? ""}
+                  onChange={(v) => {
+                    setDescriptionMd(v)
+                    setDescriptionDirty(true)
+                  }}
+                />
+              </Suspense>
               {descriptionDirty && (
                 <Button size="sm" onClick={handleDescriptionSave}>
                   Save description

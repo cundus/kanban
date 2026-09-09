@@ -1,5 +1,23 @@
 # Changelog
 
+## [WYSIWYG Markdown Editor] - 2026-09-09
+### Changed
+- Editor deskripsi task di `TaskDialog` diganti dari textarea write/preview/split menjadi **WYSIWYG** berbasis Milkdown (ProseMirror). `# `, `- `, `> `, `**bold**`, dst. berubah inline saat diketik; konten diserialisasi ke CommonMark + GFM untuk disimpan di `description_md`.
+- `MarkdownEditor` sekarang *uncontrolled* — `value` hanya seed dokumen awal; `TaskDialog` remount editor per task lewat `key={task.id}` dan seed dari nilai task kanonik (bukan state lokal) supaya tidak ada dokumen basi saat pindah task.
+- Editor di-*code-split* (lazy `import()` + `Suspense`), jadi bundle ProseMirror (~460 kB / 139 kB gzip) hanya dimuat saat task dialog pertama kali dibuka. Bundle awal board justru mengecil (~850 kB → ~777 kB) karena `marked` + `dompurify` ikut hilang.
+
+### Removed
+- `src/features/board/markdown.ts` (`renderMarkdown`) + dependency `marked` dan `dompurify` — WYSIWYG tidak pernah me-render raw HTML string ke DOM (markdown ⇆ ProseMirror doc), jadi tidak ada lagi jalur `dangerouslySetInnerHTML` untuk deskripsi task dan tidak perlu sanitasi terpisah.
+
+### Notes
+- Dependency baru: `@milkdown/kit` + `@milkdown/react` (^7.22.1). Plugin aktif: commonmark, gfm, history, listener, clipboard, cursor, indent, trailing.
+- PRD §4.6 di-update — syarat lama ("hindari TipTap/ProseMirror demi bundle kecil") di-*supersede* oleh kartu Kanban "Markdown Editor (WYSIWYG)".
+- Styling editor (`src/features/board/milkdown.css`) memakai token ramp DESIGN.md, jadi ikut light/dark theme app.
+
+### Status
+- Kode di branch `feat/wysiwyg-markdown-editor`. `tsc` + `oxlint` + `vite build` hijau; dev server serve 200.
+- **Pending QA manual**: interaksi mengetik di editor (transform inline, paste, undo/redo), round-trip simpan/buka ulang deskripsi lama, tampilan dark mode.
+
 ## [MCP Server] - 2026-09-08
 ### Added
 - Server MCP baru di `mcp-server/` (paket Node standalone, di luar workspace pnpm) — AI agent (Claude Code/OpenCode) bisa baca/tulis data kanban lewat HTTP + bearer token
