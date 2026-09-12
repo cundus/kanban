@@ -1,5 +1,15 @@
 # Changelog
 
+## [Serial Number Task] - 2026-09-12
+### Added
+- Kolom `tasks.serial_number` — nomor urut per-project (mulai dari 1), diisi otomatis oleh trigger `set_task_serial_number_trigger` saat insert (`coalesce(max(serial_number), 0) + 1` di-scope per `project_id`), dijaga unik lewat index `tasks_project_serial_number_idx (project_id, serial_number)`. Migrasi `20260912000000_task_serial_number.sql` (sudah diterapkan ke DB live) juga backfill task lama.
+- Nomor ditampilkan sebagai `#N` di pojok `TaskCard` dan di header `TaskDialog` (di samping judul), `select-all` supaya gampang di-copy.
+- MCP tools `update_task` dan `delete_task` sekarang menerima `project_id` + `serial_number` sebagai alternatif `task_id` — jadi assign/edit/hapus task cukup sebut nomor pendeknya, tanpa perlu UUID. `create_task` dan `list_tasks` ikut mengembalikan `serial_number`.
+
+### Notes
+- Export/import (`exportFormat.ts`) sengaja tidak menyertakan `serial_number` — sama seperti `id`, nomor baru di-generate ulang oleh trigger saat import.
+- Deploy MCP server (Docker via webhook `/deploy/kanban`) perlu jalan supaya schema tool `update_task`/`delete_task` yang baru live di production.
+
 ## [Image di Task Card] - 2026-09-09
 ### Added
 - Uploader gambar di `TaskDialog`, tepat di bawah composer description (`TaskImageUploader`). Sumber gambar: klik (file picker), drag-drop, atau **paste clipboard di mana saja selama dialog terbuka** — listener `paste` fase-capture di `document` menangkap file gambar sebelum editor markdown memprosesnya; paste teks/URL tidak tersentuh. Satu task boleh punya banyak gambar; tiap thumbnail bisa dibuka full-size (signed URL, tab baru) dan dihapus.

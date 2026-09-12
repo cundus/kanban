@@ -55,6 +55,7 @@ export function TaskCard({
         // Signature drag lift: DESIGN.md 6
         className="elev-lifted rounded-lg border border-accent-line bg-surface-2 px-3 py-2.5 text-ui text-text-1 rotate-2 scale-[1.03] cursor-grabbing"
       >
+        <SerialBadge n={task.serial_number} />
         {task.title}
         {labels.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1">
@@ -82,6 +83,7 @@ export function TaskCard({
           "cursor-pointer border-line transition-[background-color,border-color,transform] [transition-duration:var(--dur-fast)] [transition-timing-function:var(--ease-out)] hover:border-line-strong hover:bg-surface-3 active:translate-y-px",
         )}
       >
+        <SerialBadge n={task.serial_number} />
         {task.title}
         {labels.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1">
@@ -101,6 +103,10 @@ export function TaskCard({
       </article>
     </TaskActionsMenu>
   )
+}
+
+function SerialBadge({ n }: { n: number }) {
+  return <span className="mr-1.5 text-micro text-text-4 select-all">#{n}</span>
 }
 
 function ImageCount({ count }: { count: number }) {

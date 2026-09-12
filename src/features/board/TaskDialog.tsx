@@ -148,6 +148,9 @@ export function TaskDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent size="lg" className="sm:max-w-3xl">
           <DialogHeader className="flex flex-row items-center gap-2">
+            <span className="shrink-0 select-all text-micro text-text-4" title="Serial number task">
+              #{currentTask.serial_number}
+            </span>
             <Input
               id={TITLE_INPUT_ID}
               value={title}

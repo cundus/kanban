@@ -25,6 +25,42 @@ async function replaceLabels(taskId: string, labelIds: string[] | undefined): Pr
   if (insError) throw new Error(`Failed to set labels: ${insError.message}`)
 }
 
+type TaskRef = { id: string; project_id: string }
+
+// Resolves a task either by task_id or by (project_id, serial_number) — the
+// latter lets callers reference a task using the short human-facing number
+// shown on the card instead of its UUID.
+async function resolveTaskRef(
+  task_id: string | undefined,
+  project_id: string | undefined,
+  serial_number: number | undefined
+): Promise<{ task?: TaskRef; error?: string }> {
+  if (task_id) {
+    const { data, error } = await supabase.from("tasks").select("id, project_id").eq("id", task_id).maybeSingle()
+    if (error) {
+      console.error("resolveTaskRef DB error:", error.message)
+      return { error: "Error: failed to lookup task" }
+    }
+    if (!data) return { error: "Error: task not found" }
+    return { task: data }
+  }
+  if (project_id && serial_number !== undefined) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("id, project_id")
+      .eq("project_id", project_id)
+      .eq("serial_number", serial_number)
+      .maybeSingle()
+    if (error) {
+      console.error("resolveTaskRef DB error:", error.message)
+      return { error: "Error: failed to lookup task" }
+    }
+    if (!data) return { error: `Error: no task with serial_number ${serial_number} in this project` }
+    return { task: data }
+  }
+  return { error: "Error: provide either task_id or (project_id and serial_number)" }
+}
+
 async function validateListInProject(listId: string, projectId: string): Promise<string | null> {
   const { data, error } = await supabase.from("lists").select("project_id").eq("id", listId).single()
   if (error) {
@@ -84,7 +120,7 @@ export function registerTaskTools(server: McpServer, userId: string): void {
 
       let query = supabase
         .from("tasks")
-        .select("id, list_id, title, description_md, due_date, position, archived_at")
+        .select("id, serial_number, list_id, title, description_md, due_date, position, archived_at")
         .eq("project_id", project_id)
         .is("archived_at", null)
         .order("position")
@@ -149,7 +185,7 @@ export function registerTaskTools(server: McpServer, userId: string): void {
           position,
           created_by: userId,
         })
-        .select("id")
+        .select("id, serial_number")
         .single()
 
       if (error || !task) {
@@ -168,16 +204,21 @@ export function registerTaskTools(server: McpServer, userId: string): void {
         }
       }
 
-      return { content: [{ type: "text", text: JSON.stringify({ id: task.id }, null, 2) }] }
+      return {
+        content: [{ type: "text", text: JSON.stringify({ id: task.id, serial_number: task.serial_number }, null, 2) }],
+      }
     }
   )
 
   server.registerTool(
     "update_task",
     {
-      description: "Update fields on an existing task.",
+      description:
+        "Update fields on an existing task. Identify the task with task_id, or with project_id + serial_number (the short number shown on the task card).",
       inputSchema: {
-        task_id: z.string().uuid(),
+        task_id: z.string().uuid().optional(),
+        project_id: z.string().uuid().optional(),
+        serial_number: z.number().int().positive().optional(),
         title: z.string().min(1).optional(),
         description: z.string().nullable().optional(),
         list_id: z.string().uuid().optional(),
@@ -187,20 +228,27 @@ export function registerTaskTools(server: McpServer, userId: string): void {
         label_ids: z.array(z.string().uuid()).optional(),
       },
     },
-    async ({ task_id, title, description, list_id, position, due_date, assignee_id, label_ids }) => {
-      const { data: existingTask, error: fetchError } = await supabase
-        .from("tasks")
-        .select("project_id")
-        .eq("id", task_id)
-        .single()
-
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("update_task lookup DB error:", fetchError.message)
-        return { content: [{ type: "text", text: "Error: failed to lookup task" }], isError: true }
+    async ({
+      task_id: taskIdInput,
+      project_id: projectIdInput,
+      serial_number,
+      title,
+      description,
+      list_id,
+      position,
+      due_date,
+      assignee_id,
+      label_ids,
+    }) => {
+      const { task: existingTask, error: resolveError } = await resolveTaskRef(
+        taskIdInput,
+        projectIdInput,
+        serial_number
+      )
+      if (resolveError || !existingTask) {
+        return { content: [{ type: "text", text: resolveError ?? "Error: task not found" }], isError: true }
       }
-      if (!existingTask) {
-        return { content: [{ type: "text", text: "Error: task not found" }], isError: true }
-      }
+      const task_id = existingTask.id
 
       try {
         await assertProjectMember(userId, existingTask.project_id)
@@ -264,23 +312,24 @@ export function registerTaskTools(server: McpServer, userId: string): void {
   server.registerTool(
     "delete_task",
     {
-      description: "Delete a task.",
-      inputSchema: { task_id: z.string().uuid() },
+      description:
+        "Delete a task. Identify the task with task_id, or with project_id + serial_number (the short number shown on the task card).",
+      inputSchema: {
+        task_id: z.string().uuid().optional(),
+        project_id: z.string().uuid().optional(),
+        serial_number: z.number().int().positive().optional(),
+      },
     },
-    async ({ task_id }) => {
-      const { data: existingTask, error: fetchError } = await supabase
-        .from("tasks")
-        .select("project_id")
-        .eq("id", task_id)
-        .single()
-
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("delete_task lookup DB error:", fetchError.message)
-        return { content: [{ type: "text", text: "Error: failed to lookup task" }], isError: true }
+    async ({ task_id: taskIdInput, project_id: projectIdInput, serial_number }) => {
+      const { task: existingTask, error: resolveError } = await resolveTaskRef(
+        taskIdInput,
+        projectIdInput,
+        serial_number
+      )
+      if (resolveError || !existingTask) {
+        return { content: [{ type: "text", text: resolveError ?? "Error: task not found" }], isError: true }
       }
-      if (!existingTask) {
-        return { content: [{ type: "text", text: "Error: task not found" }], isError: true }
-      }
+      const task_id = existingTask.id
 
       try {
         await assertProjectMember(userId, existingTask.project_id)
