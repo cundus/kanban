@@ -359,8 +359,8 @@ export function BoardPage() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle px-6 py-4">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-line-subtle px-6 py-4">
         <div className="flex items-center gap-3">
           <Tooltip label="Back to projects">
             <Button
@@ -423,7 +423,7 @@ export function BoardPage() {
       >
         <main
           id="main"
-          className="flex flex-1 gap-4 overflow-x-auto px-6 py-6"
+          className="flex min-h-0 flex-1 items-start gap-4 overflow-x-auto overflow-y-hidden px-6 py-6"
           aria-busy={isLoading}
         >
           {isLoading ? (

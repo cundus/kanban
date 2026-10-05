@@ -80,11 +80,11 @@ export function ListColumn({
       style={style}
       className={
         overlay
-          ? "elev-lifted flex w-72 shrink-0 rotate-2 scale-[1.03] flex-col gap-3 rounded-lg border border-accent-line bg-surface-2 p-3"
-          : "group/list flex w-72 shrink-0 flex-col gap-3 rounded-lg border border-line bg-surface-1 p-3 transition-colors [transition-duration:var(--dur-fast)] hover:border-line-strong"
+          ? "elev-lifted flex max-h-[calc(100dvh-2rem)] w-72 shrink-0 rotate-2 scale-[1.03] flex-col gap-3 overflow-hidden rounded-lg border border-accent-line bg-surface-2 p-3"
+          : "group/list flex max-h-full w-72 shrink-0 flex-col gap-3 overflow-hidden rounded-lg border border-line bg-surface-1 p-3 transition-colors [transition-duration:var(--dur-fast)] hover:border-line-strong"
       }
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex shrink-0 items-center justify-between gap-2">
         {isEditingName ? (
           <Input
             autoFocus
@@ -121,7 +121,13 @@ export function ListColumn({
         </div>
       </div>
 
-      <div ref={overlay ? undefined : setDropRef} className="flex min-h-2 flex-col gap-2">
+      <div
+        ref={overlay ? undefined : setDropRef}
+        role="region"
+        aria-label={`Tasks in ${list.name}`}
+        tabIndex={overlay ? undefined : 0}
+        className="flex min-h-2 flex-col gap-2 overflow-y-auto overscroll-y-contain outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-line"
+      >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <TaskCard
@@ -136,7 +142,7 @@ export function ListColumn({
         </SortableContext>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2">
         <Input
           placeholder="New task title"
           value={newTaskTitle}

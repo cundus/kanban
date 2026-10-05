@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "test:description": "node scripts/test-description-editor.mjs",
     "test:image-viewer": "node scripts/test-image-viewer.mjs",
+    "test:board-scroll": "node scripts/test-board-scroll.mjs",
     "preview": "vite preview",
     "migrate": "node scripts/migrate.mjs",
     "migrate:status": "node scripts/migrate.mjs status",
