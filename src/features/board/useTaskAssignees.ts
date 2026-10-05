@@ -105,7 +105,7 @@ export function useToggleAssignee(taskId: string, projectId: string) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskAssigneesKey(projectId) })
+      return queryClient.invalidateQueries({ queryKey: taskAssigneesKey(projectId) })
     },
     onError: () => {
       toast.error("Gagal mengubah assignee.")

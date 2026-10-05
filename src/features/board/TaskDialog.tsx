@@ -14,7 +14,6 @@ import { formatRelativeTime } from "@/lib/formatRelativeTime"
 import type { Database } from "@/types/database.types"
 import { useMembers } from "@/features/members/useMembers"
 import { useUpdateTask } from "./useTasks"
-import { cn } from "cn"
 import { Avatar } from "@/components/ui/avatar"
 import { useTaskAssignees, useToggleAssignee } from "./useTaskAssignees"
 import { LabelBadge } from "@/components/ui/label-badge"
@@ -22,6 +21,7 @@ import { useLabels, useTaskLabels, useToggleTaskLabel } from "./useLabels"
 import { LabelsDialog } from "./LabelsDialog"
 import { useTaskImages } from "./useTaskImages"
 import { TaskImageUploader } from "./TaskImageUploader"
+import { TaskSelection } from "./TaskSelection"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -49,11 +49,11 @@ export function TaskDialog({
   const [dueDate, setDueDate] = useState("")
   const [labelsDialogOpen, setLabelsDialogOpen] = useState(false)
   const updateTask = useUpdateTask(projectId)
-  const { data: members } = useMembers(projectId)
-  const { data: assigneesByTask } = useTaskAssignees(projectId)
+  const { data: members, isPending: membersLoading, isError: membersError } = useMembers(projectId)
+  const { data: assigneesByTask, isPending: assigneesLoading, isError: assigneesError } = useTaskAssignees(projectId)
   const toggleAssignee = useToggleAssignee(task?.id ?? "", projectId)
-  const { data: allLabels } = useLabels(projectId)
-  const { data: labelsByTask } = useTaskLabels(projectId)
+  const { data: allLabels, isPending: labelsLoading, isError: labelsError } = useLabels(projectId)
+  const { data: labelsByTask, isPending: taskLabelsLoading, isError: taskLabelsError } = useTaskLabels(projectId)
   const toggleLabel = useToggleTaskLabel(task?.id ?? "", projectId)
   const { data: imagesByTask } = useTaskImages(projectId)
 
@@ -210,58 +210,50 @@ export function TaskDialog({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label>Assignee</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {(members ?? [])
-                    .filter((m) => m.user_id)
-                    .map((m) => {
-                      const userId = m.user_id as string
-                      const isAssigned = currentAssigneeIds.has(userId)
-                      const name = m.profile?.full_name ?? m.profile?.email ?? m.invited_email
-                      return (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => handleToggleAssignee(userId)}
-                          className={cn(
-                            "flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-micro transition-colors [transition-duration:var(--dur-fast)]",
-                            isAssigned
-                              ? "border-accent-line bg-accent-soft text-accent-solid"
-                              : "border-line text-text-3 hover:border-line-strong hover:text-text-2"
-                          )}
-                        >
-                          <Avatar name={name} src={m.profile?.avatar_url} size="sm" />
-                          {name}
-                        </button>
-                      )
+                <Label htmlFor="task-assignee">Assignee</Label>
+                <TaskSelection
+                  id="task-assignee"
+                  options={(members ?? [])
+                    .filter((member) => member.user_id && member.status === "accepted")
+                    .map((member) => {
+                      const name = member.profile?.full_name ?? member.profile?.email ?? member.invited_email
+                      return {
+                        id: member.user_id as string,
+                        name,
+                        content: <><Avatar name={name} src={member.profile?.avatar_url} size="sm" /><span className="truncate">{name}</span></>,
+                      }
                     })}
-                </div>
+                  selectedIds={currentAssigneeIds}
+                  placeholder="Select assignee"
+                  emptyMessage="No members available"
+                  loading={membersLoading || assigneesLoading}
+                  disabled={toggleAssignee.isPending || membersError || assigneesError}
+                  onToggle={handleToggleAssignee}
+                />
+                {(membersError || assigneesError) && <p role="alert" className="text-micro text-danger">Gagal memuat assignee.</p>}
               </div>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <Label>Label</Label>
+                  <Label htmlFor="task-label">Label</Label>
                   <Button variant="ghost" size="sm" onClick={() => setLabelsDialogOpen(true)}>
                     Manage labels
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {(allLabels ?? []).map((label) => {
-                    const isApplied = currentLabelIds.has(label.id)
-                    return (
-                      <button
-                        key={label.id}
-                        type="button"
-                        onClick={() => handleToggleLabel(label.id)}
-                        className={cn(
-                          "transition-opacity [transition-duration:var(--dur-fast)]",
-                          !isApplied && "opacity-40 hover:opacity-70"
-                        )}
-                      >
-                        <LabelBadge name={label.name} color={label.color} />
-                      </button>
-                    )
-                  })}
-                </div>
+                <TaskSelection
+                  id="task-label"
+                  options={(allLabels ?? []).map((label) => ({
+                    id: label.id,
+                    name: label.name,
+                    content: <LabelBadge name={label.name} color={label.color} className="min-w-0 truncate" />,
+                  }))}
+                  selectedIds={currentLabelIds}
+                  placeholder="Select label"
+                  emptyMessage="No labels available"
+                  loading={labelsLoading || taskLabelsLoading}
+                  disabled={toggleLabel.isPending || labelsError || taskLabelsError}
+                  onToggle={handleToggleLabel}
+                />
+                {(labelsError || taskLabelsError) && <p role="alert" className="text-micro text-danger">Gagal memuat label.</p>}
               </div>
               <div className="flex flex-col gap-1 text-micro text-text-4">
                 <span>Dibuat oleh {creatorName}</span>

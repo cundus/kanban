@@ -187,7 +187,7 @@ export function useToggleTaskLabel(taskId: string, projectId: string) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskLabelsKey(projectId) })
+      return queryClient.invalidateQueries({ queryKey: taskLabelsKey(projectId) })
     },
     onError: () => {
       toast.error("Gagal mengubah label.")
