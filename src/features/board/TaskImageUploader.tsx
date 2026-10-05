@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { ImagePlusIcon, Loader2Icon, Trash2Icon } from "lucide-react"
 import { cn } from "cn"
 import { Label } from "@/components/ui/label"
+import { TaskImageViewer } from "./TaskImageViewer"
 import {
   ACCEPTED_IMAGE_TYPES,
   formatBytes,
@@ -31,10 +32,12 @@ export function TaskImageUploader({
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [activeImageId, setActiveImageId] = useState<string | null>(null)
+  const viewerTriggerRef = useRef<HTMLButtonElement>(null)
   const upload = useUploadTaskImages(taskId, projectId)
   const remove = useDeleteTaskImage(projectId)
 
-  const { data: urls } = useSignedImageUrls(images.map((i) => i.storage_path))
+  const { data: urls, isFetching: urlsLoading } = useSignedImageUrls(images.map((i) => i.storage_path))
 
   const submit = (files: File[]) => {
     if (files.length > 0 && !upload.isPending) upload.mutate(files)
@@ -121,7 +124,7 @@ export function TaskImageUploader({
 
       {images.length > 0 && (
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {images.map((image) => {
+          {images.map((image, index) => {
             const url = urls?.[image.storage_path]
             return (
               <li
@@ -129,14 +132,23 @@ export function TaskImageUploader({
                 className="group/img relative overflow-hidden rounded-md border border-line bg-surface-1"
               >
                 {url ? (
-                  <a href={url} target="_blank" rel="noreferrer">
+                  <button
+                    type="button"
+                    aria-label={`View image ${index + 1}`}
+                    aria-haspopup="dialog"
+                    className="block w-full cursor-zoom-in outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-accent-line"
+                    onClick={event => {
+                      viewerTriggerRef.current = event.currentTarget
+                      setActiveImageId(image.id)
+                    }}
+                  >
                     <img
                       src={url}
                       alt=""
                       loading="lazy"
                       className="aspect-video w-full object-cover"
                     />
-                  </a>
+                  </button>
                 ) : (
                   <div className="aspect-video w-full animate-pulse bg-surface-3" />
                 )}
@@ -157,6 +169,15 @@ export function TaskImageUploader({
           })}
         </ul>
       )}
+      <TaskImageViewer
+        images={images}
+        urls={urls}
+        loading={urlsLoading}
+        activeId={activeImageId}
+        onSelect={setActiveImageId}
+        onClose={() => setActiveImageId(null)}
+        returnFocus={viewerTriggerRef}
+      />
     </div>
   )
 }

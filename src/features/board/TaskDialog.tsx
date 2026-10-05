@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
+import type { MarkdownEditorHandle } from "./MarkdownEditor"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -44,8 +45,11 @@ export function TaskDialog({
   autoFocusTitle?: boolean
 }) {
   const [title, setTitle] = useState("")
-  const [descriptionMd, setDescriptionMd] = useState("")
+  const descriptionEditorRef = useRef<MarkdownEditorHandle>(null)
   const [descriptionDirty, setDescriptionDirty] = useState(false)
+  const handleDescriptionDirty = useCallback(() => setDescriptionDirty(true), [])
+  const activeTaskIdRef = useRef(task?.id)
+  activeTaskIdRef.current = task?.id
   const [dueDate, setDueDate] = useState("")
   const [labelsDialogOpen, setLabelsDialogOpen] = useState(false)
   const updateTask = useUpdateTask(projectId)
@@ -64,7 +68,6 @@ export function TaskDialog({
   useEffect(() => {
     if (!task) return
     setTitle(task.title)
-    setDescriptionMd(task.description_md ?? "")
     setDescriptionDirty(false)
     setDueDate(task.due_date ?? "")
   }, [taskId])
@@ -112,10 +115,16 @@ export function TaskDialog({
   }
 
   const handleDescriptionSave = () => {
+    const descriptionMd = descriptionEditorRef.current?.getMarkdown()
+    if (descriptionMd == null) return
+    const savedTaskId = currentTask.id
     updateTask.mutate(
       { id: currentTask.id, description_md: descriptionMd || null },
       {
-        onSuccess: () => setDescriptionDirty(false),
+        onSuccess: () => {
+          if (activeTaskIdRef.current !== savedTaskId) return
+          setDescriptionDirty(descriptionEditorRef.current?.getMarkdown() !== descriptionMd)
+        },
         onError: () => toast.error("Gagal menyimpan deskripsi."),
       }
     )
@@ -153,10 +162,11 @@ export function TaskDialog({
             </span>
             <Input
               id={TITLE_INPUT_ID}
+              aria-label="Task title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleTitleBlur}
-              className="text-heading min-w-0 flex-1 border-none px-0 shadow-none focus-visible:ring-0"
+              className="h-auto min-w-0 flex-1 border-line-subtle bg-transparent px-3 py-2 text-title! shadow-none md:text-title!"
             />
             <TaskActionsMenu
               task={currentTask}
@@ -170,9 +180,7 @@ export function TaskDialog({
           <DialogBody className="grid gap-5 md:grid-cols-[1fr_16rem]">
             <div className="flex flex-col gap-2 md:order-1">
               <Label>Description</Label>
-              {/* Uncontrolled editor: seed from the canonical task value and
-                  remount per task via key. Local `descriptionMd` only tracks
-                  edits for the Save button. */}
+              {/* Keep typing in the editor; serialise its current document on Save. */}
               <Suspense
                 fallback={
                   <div className="h-40 animate-pulse rounded-md border border-line bg-surface-1" />
@@ -180,19 +188,18 @@ export function TaskDialog({
               >
                 <MarkdownEditor
                   key={currentTask.id}
+                  ref={descriptionEditorRef}
                   value={currentTask.description_md ?? ""}
-                  onChange={(v) => {
-                    setDescriptionMd(v)
-                    setDescriptionDirty(true)
-                  }}
+                  onDirty={handleDescriptionDirty}
                 />
               </Suspense>
               {descriptionDirty && (
-                <Button size="sm" onClick={handleDescriptionSave}>
+                <Button size="sm" onClick={handleDescriptionSave} disabled={updateTask.isPending}>
                   Save description
                 </Button>
               )}
               <TaskImageUploader
+                key={currentTask.id}
                 taskId={currentTask.id}
                 projectId={projectId}
                 images={imagesByTask?.[currentTask.id] ?? []}
