@@ -12,15 +12,7 @@ import {
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuSubmenu,
-  ContextMenuSubmenuTrigger,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
+import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu"
 import {
   Menu,
   MenuContent,
@@ -49,24 +41,30 @@ interface TaskActionsMenuProps {
   children?: React.ReactNode
 }
 
-/** Satu menu aksi task dipakai di TaskCard (context menu) dan header TaskDialog (dropdown). */
-function TaskActionsMenu({
+interface TaskMenuItemsProps {
+  task: Task
+  projectId: string
+  disableRename?: boolean
+  onRename: () => void
+  onDelete: () => void
+  SubmenuContent: typeof MenuContent
+}
+
+// Rendered inside the popup, so query/mutation hooks only mount while the menu is open.
+// Keeps every TaskCard on the board cheap to re-render during drag.
+function TaskMenuItems({
   task,
   projectId,
-  variant,
   disableRename,
   onRename,
-  children,
-}: TaskActionsMenuProps) {
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  onDelete,
+  SubmenuContent,
+}: TaskMenuItemsProps) {
   const queryClient = useQueryClient()
   const { data: lists } = useLists(projectId)
   const duplicateTask = useDuplicateTask(projectId)
   const archiveTask = useArchiveTask(projectId)
-  const deleteTask = useDeleteTask(projectId)
   const moveTask = useMoveTask(projectId)
-
-  const handleDuplicate = () => duplicateTask.mutate(task)
 
   const handleCopyLink = async () => {
     const url = window.location.origin + window.location.pathname + "?task=" + task.id
@@ -78,8 +76,6 @@ function TaskActionsMenu({
     }
   }
 
-  const handleArchive = () => archiveTask.mutate(task.id)
-
   const handleMoveToList = (targetListId: string) => {
     if (targetListId === task.list_id) return
     const cachedTasks = queryClient.getQueryData<Task[]>(tasksKey(projectId)) ?? []
@@ -88,65 +84,114 @@ function TaskActionsMenu({
     moveTask.mutate({ taskId: task.id, toListId: targetListId, newPosition })
   }
 
-  const handleDeleteConfirm = () => {
-    deleteTask.mutate(task.id, {
-      onSuccess: () => toast.success("Task dihapus."),
-    })
-    setConfirmOpen(false)
+  return (
+    <>
+      {!disableRename && (
+        <MenuItem onClick={onRename}>
+          <PencilIcon /> Rename
+        </MenuItem>
+      )}
+      <MenuItem onClick={() => duplicateTask.mutate(task)}>
+        <CopyIcon /> Duplicate
+      </MenuItem>
+      <MenuSubmenu>
+        <MenuSubmenuTrigger>
+          <FolderInputIcon /> Move to list
+        </MenuSubmenuTrigger>
+        <SubmenuContent>
+          {(lists ?? []).map((list) => (
+            <MenuItem
+              key={list.id}
+              disabled={list.id === task.list_id}
+              onClick={() => handleMoveToList(list.id)}
+            >
+              {list.name}
+            </MenuItem>
+          ))}
+        </SubmenuContent>
+      </MenuSubmenu>
+      <MenuItem onClick={handleCopyLink}>
+        <LinkIcon /> Copy link
+      </MenuItem>
+      <MenuSeparator />
+      <MenuItem onClick={() => archiveTask.mutate(task.id)}>
+        <ArchiveIcon /> Archive
+      </MenuItem>
+      <MenuItem className="text-danger" onClick={onDelete}>
+        <TrashIcon /> Delete
+      </MenuItem>
+    </>
+  )
+}
+
+function DeleteTaskDialog({
+  task,
+  projectId,
+  onClose,
+}: {
+  task: Task
+  projectId: string
+  onClose: () => void
+}) {
+  const deleteTask = useDeleteTask(projectId)
+
+  const handleConfirm = () => {
+    // mutateAsync: per-call callbacks of mutate() are dropped once this dialog unmounts.
+    deleteTask
+      .mutateAsync(task.id)
+      .then(() => toast.success("Task dihapus."))
+      .catch(() => toast.error("Gagal menghapus task."))
+    onClose()
   }
 
-  const confirmDialog = (
+  return (
     <ConfirmDialog
-      open={confirmOpen}
-      onOpenChange={setConfirmOpen}
+      open
+      onOpenChange={(open) => !open && onClose()}
       title="Delete task?"
       description={`Task "${task.title}" akan dihapus permanen.`}
       confirmLabel="Delete"
-      onConfirm={handleDeleteConfirm}
+      onConfirm={handleConfirm}
     />
   )
+}
 
-  if (variant === "context") {
+/** Satu menu aksi task dipakai di TaskCard (context menu) dan header TaskDialog (dropdown). */
+function TaskActionsMenu({
+  task,
+  projectId,
+  variant,
+  disableRename,
+  onRename,
+  children,
+}: TaskActionsMenuProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const isContext = variant === "context"
+  const Content = isContext ? ContextMenuContent : MenuContent
+
+  const items = (
+    <Content>
+      <TaskMenuItems
+        task={task}
+        projectId={projectId}
+        disableRename={disableRename}
+        onRename={onRename}
+        onDelete={() => setConfirmOpen(true)}
+        SubmenuContent={Content}
+      />
+    </Content>
+  )
+
+  const confirmDialog = confirmOpen && (
+    <DeleteTaskDialog task={task} projectId={projectId} onClose={() => setConfirmOpen(false)} />
+  )
+
+  if (isContext) {
     return (
       <>
         <ContextMenu>
           <ContextMenuTrigger>{children}</ContextMenuTrigger>
-          <ContextMenuContent>
-            {!disableRename && (
-              <ContextMenuItem onClick={onRename}>
-                <PencilIcon /> Rename
-              </ContextMenuItem>
-            )}
-            <ContextMenuItem onClick={handleDuplicate}>
-              <CopyIcon /> Duplicate
-            </ContextMenuItem>
-            <ContextMenuSubmenu>
-              <ContextMenuSubmenuTrigger>
-                <FolderInputIcon /> Move to list
-              </ContextMenuSubmenuTrigger>
-              <ContextMenuContent>
-                {(lists ?? []).map((list) => (
-                  <ContextMenuItem
-                    key={list.id}
-                    disabled={list.id === task.list_id}
-                    onClick={() => handleMoveToList(list.id)}
-                  >
-                    {list.name}
-                  </ContextMenuItem>
-                ))}
-              </ContextMenuContent>
-            </ContextMenuSubmenu>
-            <ContextMenuItem onClick={handleCopyLink}>
-              <LinkIcon /> Copy link
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-            <ContextMenuItem onClick={handleArchive}>
-              <ArchiveIcon /> Archive
-            </ContextMenuItem>
-            <ContextMenuItem className="text-danger" onClick={() => setConfirmOpen(true)}>
-              <TrashIcon /> Delete
-            </ContextMenuItem>
-          </ContextMenuContent>
+          {items}
         </ContextMenu>
         {confirmDialog}
       </>
@@ -163,42 +208,7 @@ function TaskActionsMenu({
             </Button>
           }
         />
-        <MenuContent>
-          {!disableRename && (
-            <MenuItem onClick={onRename}>
-              <PencilIcon /> Rename
-            </MenuItem>
-          )}
-          <MenuItem onClick={handleDuplicate}>
-            <CopyIcon /> Duplicate
-          </MenuItem>
-          <MenuSubmenu>
-            <MenuSubmenuTrigger>
-              <FolderInputIcon /> Move to list
-            </MenuSubmenuTrigger>
-            <MenuContent>
-              {(lists ?? []).map((list) => (
-                <MenuItem
-                  key={list.id}
-                  disabled={list.id === task.list_id}
-                  onClick={() => handleMoveToList(list.id)}
-                >
-                  {list.name}
-                </MenuItem>
-              ))}
-            </MenuContent>
-          </MenuSubmenu>
-          <MenuItem onClick={handleCopyLink}>
-            <LinkIcon /> Copy link
-          </MenuItem>
-          <MenuSeparator />
-          <MenuItem onClick={handleArchive}>
-            <ArchiveIcon /> Archive
-          </MenuItem>
-          <MenuItem className="text-danger" onClick={() => setConfirmOpen(true)}>
-            <TrashIcon /> Delete
-          </MenuItem>
-        </MenuContent>
+        {items}
       </Menu>
       {confirmDialog}
     </>

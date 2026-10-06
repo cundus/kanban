@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { ImageIcon } from "lucide-react"
@@ -13,7 +14,9 @@ import { useTaskImages } from "./useTaskImages"
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
-export function TaskCard({
+// memo: drag state changes re-render the whole board; unchanged cards (each
+// with two TaskActionsMenu instances) must skip re-render to keep drag smooth.
+export const TaskCard = memo(function TaskCard({
   task,
   listId,
   projectId,
@@ -24,8 +27,8 @@ export function TaskCard({
   task: Task
   listId: string
   projectId: string
-  onOpen: () => void
-  onRenameTask: () => void
+  onOpen: (taskId: string) => void
+  onRenameTask: (taskId: string) => void
   overlay?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -49,6 +52,8 @@ export function TaskCard({
     opacity: isDragging ? 0 : 1,
   }
 
+  const handleRename = () => onRenameTask(task.id)
+
   if (overlay) {
     return (
       <article
@@ -71,16 +76,18 @@ export function TaskCard({
   }
 
   return (
-    <TaskActionsMenu task={task} projectId={projectId} variant="context" onRename={onRenameTask}>
+    <TaskActionsMenu task={task} projectId={projectId} variant="context" onRename={handleRename}>
       <article
         ref={setNodeRef}
         style={style}
         {...attributes}
         {...listeners}
-        onClick={onOpen}
+        onClick={() => onOpen(task.id)}
+        // No `transform` in the CSS transition: dnd-kit drives transform inline,
+        // and a class transition on it makes cards trail behind the pointer.
         className={cn(
           "group/card relative rounded-lg border bg-surface-2 px-3 py-2.5 text-ui text-text-1",
-          "cursor-pointer border-line transition-[background-color,border-color,transform] [transition-duration:var(--dur-fast)] [transition-timing-function:var(--ease-out)] hover:border-line-strong hover:bg-surface-3 active:translate-y-px",
+          "cursor-pointer border-line transition-[background-color,border-color] [transition-duration:var(--dur-fast)] [transition-timing-function:var(--ease-out)] hover:border-line-strong hover:bg-surface-3",
         )}
       >
         <SerialBadge n={task.serial_number} />
@@ -98,12 +105,12 @@ export function TaskCard({
           className="absolute right-1 top-1 opacity-0 transition-opacity group-hover/card:opacity-100 sm:opacity-0 max-sm:opacity-100"
           onClick={(e) => e.stopPropagation()}
         >
-          <TaskActionsMenu task={task} projectId={projectId} variant="dropdown" onRename={onRenameTask} />
+          <TaskActionsMenu task={task} projectId={projectId} variant="dropdown" onRename={handleRename} />
         </div>
       </article>
     </TaskActionsMenu>
   )
-}
+})
 
 function SerialBadge({ n }: { n: number }) {
   return <span className="mr-1.5 text-micro text-text-4 select-all">#{n}</span>

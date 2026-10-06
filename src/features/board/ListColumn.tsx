@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { memo, useMemo, useState } from "react"
 import { useDroppable } from "@dnd-kit/core"
 import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -15,7 +15,7 @@ import { useCreateTask } from "./useTasks"
 type List = Database["public"]["Tables"]["lists"]["Row"]
 type Task = Database["public"]["Tables"]["tasks"]["Row"]
 
-export function ListColumn({
+export const ListColumn = memo(function ListColumn({
   list,
   projectId,
   tasks,
@@ -135,8 +135,8 @@ export function ListColumn({
               task={task}
               listId={list.id}
               projectId={projectId}
-              onOpen={() => onOpenTask(task.id)}
-              onRenameTask={() => onRenameTask(task.id)}
+              onOpen={onOpenTask}
+              onRenameTask={onRenameTask}
             />
           ))}
         </SortableContext>
@@ -163,4 +163,4 @@ export function ListColumn({
       />
     </section>
   )
-}
+})

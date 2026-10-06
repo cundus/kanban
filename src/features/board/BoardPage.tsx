@@ -165,13 +165,17 @@ export function BoardPage() {
     createList.mutate(newListName, { onSuccess: () => setNewListName("") })
   }
 
-  function handleOpenTask(taskId: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
-      next.set("task", taskId)
-      return next
-    })
-  }
+  // Stable identities so memoized ListColumn/TaskCard skip re-render mid-drag.
+  const handleOpenTask = useCallback(
+    (taskId: string) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.set("task", taskId)
+        return next
+      })
+    },
+    [setSearchParams]
+  )
 
   function handleCloseTaskDialog() {
     setSearchParams(
@@ -185,14 +189,13 @@ export function BoardPage() {
     setAutoFocusTitle(false)
   }
 
-  function handleRenameTask(taskId: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
-      next.set("task", taskId)
-      return next
-    })
-    setAutoFocusTitle(true)
-  }
+  const handleRenameTask = useCallback(
+    (taskId: string) => {
+      handleOpenTask(taskId)
+      setAutoFocusTitle(true)
+    },
+    [handleOpenTask]
+  )
 
   function onDragStart(event: DragStartEvent) {
     const { active } = event
