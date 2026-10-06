@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 import {
@@ -120,6 +120,9 @@ export function BoardPage() {
     [dndLists, lists]
   )
 
+  // Reuse previous per-list arrays when unchanged so a cross-list drag only
+  // re-renders the two affected columns instead of the whole board.
+  const prevTasksByListRef = useRef(new Map<string, Task[]>())
   const tasksByList = useMemo(() => {
     const map = new Map<string, Task[]>()
     for (const t of effectiveTasks) {
@@ -127,7 +130,15 @@ export function BoardPage() {
       arr.push(t)
       map.set(t.list_id, arr)
     }
-    for (const arr of map.values()) arr.sort((a, b) => a.position - b.position)
+    const prev = prevTasksByListRef.current
+    for (const [listId, arr] of map) {
+      arr.sort((a, b) => a.position - b.position)
+      const old = prev.get(listId)
+      if (old && old.length === arr.length && old.every((t, i) => t === arr[i])) {
+        map.set(listId, old)
+      }
+    }
+    prevTasksByListRef.current = map
     return map
   }, [effectiveTasks])
 
